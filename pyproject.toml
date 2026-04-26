@@ -1,0 +1,25 @@
+[project]
+name = "sample"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.13.3",
+    "pydantic-settings>=2.14.0",
+    "psycopg>=3.3.3",
+    "sqlalchemy[asyncio]>=2.0.49",
+    "redis>=5.2.0",
+    "fastapi>=0.136.1",
+    "python-jose[cryptography]>=3.4.0",
+    "bcrypt>=4.0.0",
+    "structlog>=24.0.0",
+    "uvicorn[standard]>=0.34.0",
+    "langgraph>=1.1.9",
+    "langchain-openai>=1.2.1",
+    "fastmcp>=2.0.0",
+    "langchain-mcp-adapters>=0.1.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*", "tools_mcp*"]

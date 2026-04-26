@@ -1,0 +1,149 @@
+# =============================================================================
+# Ecommerce Customer Service Agent — Docker Compose
+# =============================================================================
+#
+# Services
+# --------
+#   postgres   — persistent ecommerce data (24 tables)
+#   redis      — session memory, caching, rate limiting
+#   mcp-tools  — FastMCP tools server (port 8001, internal only in production)
+#   agent      — FastAPI + LangGraph chat service (port 8000, public)
+#
+# Quick start
+# -----------
+#   cp .env.example .env  
+#   docker compose up --build
+#
+# Seed the database (first run)
+# -----------
+#   Place a pg_dump SQL file in ./dumps/ before `docker compose up`.
+#   The postgres container runs every *.sql file in /docker-entrypoint-initdb.d
+#   on first startup (empty volume only).
+#
+# Production notes
+# ----------------
+#   - Remove the `ports:` block from mcp-tools — it must NOT be exposed to the
+#     host. Only the agent container reaches it via the Docker internal network.
+#   - Replace the JWT_SECRET_KEY default with a long random secret.
+#   - Set ENVIRONMENT=production to disable uvicorn --reload and SQL echo.
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — ecommerce data store
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecommerce_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: root123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # SQL files dropped here are executed once on first init (empty volume).
+      - ./dumps:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d ecommerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Redis — session hot-storage, tool-result cache, rate limiting
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    # AOF persistence: session data survives container restarts.
+    # LRU eviction: cache entries are evicted under memory pressure.
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # MCP Tools service — FastMCP server (internal only)
+  # ---------------------------------------------------------------------------
+  mcp-tools:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: customer-service-agent:latest
+    container_name: ecommerce_mcp_tools
+    restart: unless-stopped
+    command: python -m tools_mcp.server
+    environment:
+      SERVICE_NAME: mcp-tools
+      # Docker-internal URLs (override the localhost defaults from .env)
+      DATABASE_URL: postgresql+psycopg://dev_user:root123@postgres:5432/ecommerce
+      REDIS_URL: redis://redis:6379/0
+    env_file:
+      - .env
+    # Expose 8001 to the host ONLY during development (MCP Inspector, manual tests).
+    # In production: remove this `ports:` block — the agent reaches mcp-tools
+    # exclusively via the internal Docker network (http://mcp-tools:8001).
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # Agent service — FastAPI + LangGraph chat API
+  # ---------------------------------------------------------------------------
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: customer-service-agent:latest
+    container_name: ecommerce_agent
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      SERVICE_NAME: agent
+      # Docker-internal URLs (override the localhost defaults from .env)
+      DATABASE_URL: postgresql+psycopg://dev_user:root123@postgres:5432/ecommerce
+      REDIS_URL: redis://redis:6379/0
+      MCP_TOOLS_URL: http://mcp-tools:8001/sse
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mcp-tools:
+        condition: service_healthy
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
