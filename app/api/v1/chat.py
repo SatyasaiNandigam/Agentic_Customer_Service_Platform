@@ -1,10 +1,15 @@
-"""Chat endpoints — POST (sync) and WebSocket (streaming) interfaces to the agent.
+"""Chat endpoints — POST (sync), POST/stream (SSE), WebSocket (streaming).
 
 Endpoint summary
 ----------------
 POST   /api/v1/chat
     Single-turn synchronous request/response.  Blocks until the full agent
     response is ready.  Use for REST clients that don't need token streaming.
+
+POST   /api/v1/chat/stream
+    Single-turn Server-Sent Events stream.  Tokens are emitted as they arrive
+    from the LLM.  The connection closes automatically after the ``done`` event.
+    Appears in Swagger UI; use this for browser/curl streaming without WebSocket.
 
 WebSocket  /api/v1/chat/ws
     Streaming chat session via LangGraph's ``astream_events()``.  Tokens are
@@ -49,10 +54,12 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import AsyncGenerator
 from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
+from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
 from pydantic import BaseModel, Field
@@ -69,6 +76,7 @@ from app.memory.long_term import load_customer_history
 from app.memory.short_term import (
     append_messages,
     get_session_messages,
+    get_user_sessions,
     save_session_context,
 )
 
@@ -122,6 +130,18 @@ class MessageItem(BaseModel):
 class HistoryResponse(BaseModel):
     session_id: str
     messages: list[MessageItem]
+    count: int
+
+
+class SessionItem(BaseModel):
+    session_id: str = Field(..., description="Chat session UUID.")
+    updated_at: str | None = Field(None, description="ISO timestamp of last activity.")
+    last_intent: str = Field(..., description="Intent classified in the last turn.")
+    message_count: int = Field(..., description="Number of messages stored in this session.")
+
+
+class SessionListResponse(BaseModel):
+    sessions: list[SessionItem]
     count: int
 
 
@@ -310,6 +330,155 @@ async def post_chat(
 
 
 # ---------------------------------------------------------------------------
+# POST /chat/stream  — SSE single-turn streaming endpoint
+# ---------------------------------------------------------------------------
+
+
+async def _stream_agent_response(
+    user_id: str,
+    user_role,
+    session_id: str,
+    user_message: str,
+    run_id: uuid.UUID,
+) -> AsyncGenerator[str, None]:
+    """Async generator that yields SSE lines (``data: <json>\\n\\n``) for one turn."""
+    log = logger.bind(user_id=user_id, session_id=session_id, run_id=str(run_id))
+
+    async with get_db_context() as db:
+        prior_messages, customer_history = await _load_history(db, user_id, session_id)
+
+    state = create_initial_state(
+        user_id=user_id,
+        session_id=session_id,
+        user_role=user_role,
+        max_turns=settings.agent_max_turns,
+    )
+    state["messages"] = prior_messages + [HumanMessage(content=user_message)]
+    state["customer_history"] = customer_history
+
+    config = RunnableConfig(
+        run_id=run_id,
+        tags=["production", "sse"],
+        metadata={"customer_id": str(user_id), "session_id": session_id},
+    )
+
+    streamed_tokens: list[str] = []
+    final_intent: str = "unknown"
+    final_state: dict = {}
+
+    try:
+        async for event in graph.astream_events(state, config=config, version="v2"):
+            event_type: str = event.get("event", "")
+            event_name: str = event.get("name", "")
+            metadata: dict = event.get("metadata", {})
+            node: str = metadata.get("langgraph_node", "")
+
+            if event_type == "on_chat_model_stream" and node == NODE_RESPONSE_GENERATOR:
+                chunk = event.get("data", {}).get("chunk")
+                if chunk is not None:
+                    token_text = _extract_chunk_text(chunk)
+                    if token_text:
+                        streamed_tokens.append(token_text)
+                        yield f"data: {json.dumps({'type': 'token', 'content': token_text})}\n\n"
+
+            elif event_type == "on_chain_start" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
+                tool_name = _get_tool_name_from_state(event)
+                yield f"data: {json.dumps({'type': 'tool_start', 'tool': tool_name})}\n\n"
+
+            elif event_type == "on_chain_end" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
+                tool_name = _get_tool_name_from_state(event)
+                yield f"data: {json.dumps({'type': 'tool_end', 'tool': tool_name})}\n\n"
+
+            elif event_type == "on_chain_end" and event_name == "LangGraph":
+                output = event.get("data", {}).get("output", {})
+                if isinstance(output, dict):
+                    final_state = output
+                    final_intent = output.get("intent", "unknown")
+
+    except Exception as exc:
+        log.error("sse.graph_stream_error", error=str(exc))
+        yield f"data: {json.dumps({'type': 'error', 'detail': 'An error occurred. Please try again.'})}\n\n"
+        return
+
+    if streamed_tokens:
+        ai_response = "".join(streamed_tokens).strip()
+    elif final_state:
+        ai_response = _extract_ai_response(final_state)
+    else:
+        ai_response = "I'm sorry, I couldn't generate a response. Please try again."
+
+    await append_messages(
+        session_id,
+        [HumanMessage(content=user_message), AIMessage(content=ai_response)],
+    )
+    await save_session_context(session_id, user_id=user_id, intent=final_intent)
+
+    yield f"data: {json.dumps({'type': 'done', 'message': ai_response, 'session_id': session_id, 'intent': final_intent, 'run_id': str(run_id)})}\n\n"
+
+    log.info("sse.turn_complete", intent=final_intent, response_length=len(ai_response))
+
+
+@router.post(
+    "/chat/stream",
+    summary="Chat (streaming — SSE)",
+    description=(
+        "Send a single user message and receive the agent's response as a "
+        "Server-Sent Events stream. Each ``data:`` line is a JSON object. "
+        "The stream ends automatically after the ``done`` event.\n\n"
+        "**Event types:**\n"
+        "- ``token`` — partial LLM token (render progressively)\n"
+        "- ``tool_start`` / ``tool_end`` — tool lifecycle (show/hide spinner)\n"
+        "- ``done`` — turn complete with full message + metadata\n"
+        "- ``error`` — non-fatal error (stream closes after this)"
+    ),
+    response_class=StreamingResponse,
+    responses={
+        200: {
+            "content": {
+                "text/event-stream": {
+                    "schema": {"type": "string"},
+                    "example": (
+                        'data: {"type":"tool_start","tool":"get_order_status"}\n\n'
+                        'data: {"type":"tool_end","tool":"get_order_status"}\n\n'
+                        'data: {"type":"token","content":"Your order is"}\n\n'
+                        'data: {"type":"done","message":"Your order is on the way.",'
+                        '"session_id":"<uuid>","intent":"order_status","run_id":"<uuid>"}\n\n'
+                    ),
+                }
+            },
+            "description": "SSE stream of token / tool / done events.",
+        }
+    },
+)
+async def post_chat_stream(
+    body: ChatRequest,
+    user: CurrentUser,
+) -> StreamingResponse:
+    """Stream a single chat turn as Server-Sent Events."""
+    session_id = _resolve_session_id(body.session_id, user.session_id)
+    run_id = uuid.uuid4()
+
+    logger.bind(
+        user_id=user.user_id, session_id=session_id, run_id=str(run_id)
+    ).info("sse.request_received", message_length=len(body.message))
+
+    return StreamingResponse(
+        _stream_agent_response(
+            user_id=user.user_id,
+            user_role=user.role,
+            session_id=session_id,
+            user_message=body.message,
+            run_id=run_id,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
 # GET /chat/history/{session_id}
 # ---------------------------------------------------------------------------
 
@@ -341,6 +510,33 @@ async def get_chat_history(
         messages=items,
         count=len(items),
     )
+
+
+# ---------------------------------------------------------------------------
+# GET /chat/sessions  — list user's sessions
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/chat/sessions",
+    response_model=SessionListResponse,
+    summary="List user's chat sessions",
+    description=(
+        "Return up to *limit* recent chat sessions for the authenticated user, "
+        "sorted by most-recently-active first. Each item includes the session ID, "
+        "last activity timestamp, last classified intent, and message count. "
+        "Pass the ``session_id`` to ``POST /chat`` or the WebSocket endpoint to "
+        "resume a previous conversation."
+    ),
+)
+async def get_chat_sessions(
+    user: CurrentUser,
+    limit: Annotated[int, Query(ge=1, le=50, description="Max sessions to return.")] = 20,
+) -> SessionListResponse:
+    sessions_data = await get_user_sessions(user.user_id, limit=limit)
+    items = [SessionItem(**s) for s in sessions_data]
+    logger.bind(user_id=user.user_id).info("chat.sessions_listed", count=len(items))
+    return SessionListResponse(sessions=items, count=len(items))
 
 
 # ---------------------------------------------------------------------------
@@ -469,13 +665,13 @@ async def websocket_chat(
                                 )
 
                     # -- Tool execution lifecycle events --
-                    elif event_type == "on_chain_start" and node == NODE_TOOL_EXECUTOR:
+                    elif event_type == "on_chain_start" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
                         tool_name = _get_tool_name_from_state(event)
                         await websocket.send_json(
                             {"type": "tool_start", "tool": tool_name}
                         )
 
-                    elif event_type == "on_chain_end" and node == NODE_TOOL_EXECUTOR:
+                    elif event_type == "on_chain_end" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
                         tool_name = _get_tool_name_from_state(event)
                         await websocket.send_json(
                             {"type": "tool_end", "tool": tool_name}

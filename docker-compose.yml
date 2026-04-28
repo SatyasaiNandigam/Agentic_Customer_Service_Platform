@@ -127,6 +127,7 @@ services:
       DATABASE_URL: postgresql+psycopg://dev_user:root123@postgres:5432/ecommerce
       REDIS_URL: redis://redis:6379/0
       MCP_TOOLS_URL: http://mcp-tools:8001/sse
+      CORS_ALLOWED_ORIGINS: '["http://localhost:3000","http://localhost:8000","http://localhost:8080"]'
     env_file:
       - .env
     ports:

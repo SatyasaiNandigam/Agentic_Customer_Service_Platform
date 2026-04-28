@@ -49,6 +49,8 @@ from app.config import get_settings
 
 logger = structlog.get_logger(__name__)
 
+_USER_SESSIONS_TTL = 30 * 24 * 3600  # 30 days — longer than individual session TTL
+
 
 # ---------------------------------------------------------------------------
 # Key helpers
@@ -61,6 +63,10 @@ def _messages_key(session_id: str) -> str:
 
 def _meta_key(session_id: str) -> str:
     return f"conv:{session_id}:meta"
+
+
+def _user_sessions_key(user_id: str | int) -> str:
+    return f"user:{user_id}:sessions"
 
 
 # ---------------------------------------------------------------------------
@@ -273,12 +279,14 @@ async def save_session_context(session_id: str, **fields: str | int | None) -> N
     ttl = settings.session_ttl_seconds
 
     # Filter out None values and stringify
+    raw_user_id = fields.get("user_id")  # keep uncoerced for the sorted-set key
     payload: dict[str, str] = {
         k: str(v)
         for k, v in fields.items()
         if v is not None
     }
-    payload["updated_at"] = datetime.now(tz=timezone.utc).isoformat()
+    now = datetime.now(tz=timezone.utc)
+    payload["updated_at"] = now.isoformat()
 
     if not payload:
         return
@@ -288,6 +296,12 @@ async def save_session_context(session_id: str, **fields: str | int | None) -> N
             pipe = redis.pipeline()
             pipe.hset(key, mapping=payload)
             pipe.expire(key, ttl)
+            # Keep a per-user sorted set so we can list sessions later.
+            # Score = Unix timestamp so ZREVRANGE returns newest first.
+            if raw_user_id is not None:
+                user_key = _user_sessions_key(raw_user_id)
+                pipe.zadd(user_key, {session_id: now.timestamp()})
+                pipe.expire(user_key, _USER_SESSIONS_TTL)
             await pipe.execute()
 
         logger.debug(
@@ -302,6 +316,64 @@ async def save_session_context(session_id: str, **fields: str | int | None) -> N
             session_id=session_id,
             error=str(exc),
         )
+
+
+async def get_user_sessions(
+    user_id: str | int,
+    limit: int = 20,
+) -> list[dict]:
+    """Return metadata for the most recent chat sessions belonging to *user_id*.
+
+    Reads the per-user sorted set (newest score first), then fetches the meta
+    hash and message count for each session in a single pipeline round-trip.
+    Sessions whose meta has expired from Redis are silently omitted.
+
+    Args:
+        user_id: The user identifier used when ``save_session_context`` was called.
+        limit:   Maximum number of sessions to return (newest first).
+
+    Returns:
+        List of dicts with keys: session_id, updated_at, last_intent, message_count.
+        Returns ``[]`` on Redis error (fail-open).
+    """
+    key = _user_sessions_key(user_id)
+    try:
+        async with get_redis_context() as redis:
+            entries: list[tuple[str, float]] = await redis.zrevrange(
+                key, 0, limit - 1, withscores=True
+            )
+            if not entries:
+                return []
+
+            session_ids = [sid for sid, _ in entries]
+
+            pipe = redis.pipeline()
+            for sid in session_ids:
+                pipe.hgetall(_meta_key(sid))
+                pipe.llen(_messages_key(sid))
+            results = await pipe.execute()
+
+            sessions: list[dict] = []
+            for i, sid in enumerate(session_ids):
+                meta: dict[str, str] = results[i * 2]
+                msg_count: int = results[i * 2 + 1]
+                if not meta:
+                    continue
+                sessions.append({
+                    "session_id": sid,
+                    "updated_at": meta.get("updated_at"),
+                    "last_intent": meta.get("intent", "unknown"),
+                    "message_count": msg_count,
+                })
+            return sessions
+
+    except RedisError as exc:
+        logger.warning(
+            "short_term.get_user_sessions_error",
+            user_id=str(user_id),
+            error=str(exc),
+        )
+        return []
 
 
 async def delete_session(session_id: str) -> None:
