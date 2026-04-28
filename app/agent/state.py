@@ -99,8 +99,8 @@ class AgentState(TypedDict):
     
     retry_count: int
     
-    customer_summary: str | None
-    
+    context_summary: str | None
+
     customer_history: dict | None
     
     
@@ -152,6 +152,6 @@ def create_initial_state(
         max_turns=max_turns,
         retry_count=0,
         # Memory
-        customer_summary=None,
+        context_summary=None,
         customer_history=None,
     )

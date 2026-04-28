@@ -9,15 +9,18 @@ from fastapi.responses import JSONResponse
 
 from sqlalchemy import text
 
+from psycopg_pool import AsyncConnectionPool
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+
+from app.agent.graph import build_graph
 from app.api.router import api_router
 from app.cache.redis_client import close_redis_pool, ping_redis
-
 from app.config import get_settings
 from app.db.session import engine
 from app.mcp_client.tool_registry import (
     clear_tool_registry,
     registry_status,
-    warmup_tool_registry
+    warmup_tool_registry,
 )
 
 
@@ -119,7 +122,30 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             error=str(exc),
             detail="Tool schemas will be fetched live on first request per role.",
         )
-    
+
+    # LangGraph checkpointer — dedicated psycopg3 pool (separate from SQLAlchemy)
+    try:
+        checkpoint_pool = AsyncConnectionPool(
+            conninfo=settings.checkpoint_db_url,
+            min_size=settings.checkpoint_pool_min_size,
+            max_size=settings.checkpoint_pool_max_size,
+            kwargs={"autocommit": True},
+            open=False,
+        )
+        await checkpoint_pool.open(wait=True)
+        checkpointer = AsyncPostgresSaver(checkpoint_pool)
+        await checkpointer.setup()  # idempotent: CREATE TABLE IF NOT EXISTS
+        app.state.graph = build_graph(checkpointer=checkpointer)
+        app.state.checkpoint_pool = checkpoint_pool
+        logger.info(
+            "checkpointer.initialized",
+            pool_min=settings.checkpoint_pool_min_size,
+            pool_max=settings.checkpoint_pool_max_size,
+        )
+    except Exception as exc:
+        logger.error("checkpointer.init_failed", error=str(exc))
+        raise RuntimeError(f"Cannot initialize LangGraph checkpointer: {exc}") from exc
+
     yield
 
     # ----- Shutdown -----
@@ -130,6 +156,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("db.pool_disposed")
     await close_redis_pool()
     logger.info("redis.pool_closed")
+    if hasattr(app.state, "checkpoint_pool"):
+        await app.state.checkpoint_pool.close()
+        logger.info("checkpointer.pool_closed")
     logger.info("app.shutdown_complete")
     
     

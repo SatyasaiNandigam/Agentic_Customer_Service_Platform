@@ -58,7 +58,7 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
@@ -66,19 +66,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.edges import NODE_RESPONSE_GENERATOR, NODE_TOOL_EXECUTOR
-from app.agent.graph import graph
-from app.agent.state import create_initial_state
 from app.auth.middleware import CurrentUser, get_current_user_ws
 from app.auth.service import TokenData
 from app.config import get_settings
 from app.db.session import get_db, get_db_context
 from app.memory.long_term import load_customer_history
-from app.memory.short_term import (
-    append_messages,
-    get_session_messages,
-    get_user_sessions,
-    save_session_context,
-)
+from app.memory.short_term import get_user_sessions, save_session_context
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -211,15 +204,10 @@ def _messages_to_items(messages: list) -> list[MessageItem]:
     return items
 
 
-async def _load_history(db: AsyncSession, user_id: int, session_id: str) -> tuple:
-    """Load prior messages (Redis) and customer history (PostgreSQL).
-
-    Returns:
-        (prior_messages, customer_history) — customer_history may be None.
-    """
-    prior_messages = await get_session_messages(session_id, limit=20)
+async def _load_customer_history(db: AsyncSession, user_id: int, session_id: str) -> dict | None:
+    """Load customer history from PostgreSQL. Messages now managed by LangGraph checkpointer."""
     try:
-        customer_history = await load_customer_history(db, user_id)
+        return await load_customer_history(db, user_id)
     except Exception as exc:
         logger.warning(
             "chat.history_load_failed",
@@ -227,8 +215,26 @@ async def _load_history(db: AsyncSession, user_id: int, session_id: str) -> tupl
             session_id=session_id,
             error=str(exc),
         )
-        customer_history = None
-    return prior_messages, customer_history
+        return None
+
+
+# Fields that must be reset at the start of every turn. The checkpointer carries
+# these from the prior turn; stale values would misroute the new turn.
+_TURN_RESET: dict = {
+    "intent": "unknown",
+    "confidence": 0.0,
+    "requires_tool": False,
+    "needs_escalation": False,
+    "selected_tool": None,
+    "tool_input": None,
+    "tool_result": None,
+    "tool_error": None,
+    "tool_call_counts": {},
+    "input_safe": True,
+    "output_safe": True,
+    "guardrail_violation": None,
+    "retry_count": 0,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +254,7 @@ async def _load_history(db: AsyncSession, user_id: int, session_id: str) -> tupl
 )
 async def post_chat(
     body: ChatRequest,
+    request: Request,
     user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ChatResponse:
@@ -272,18 +279,19 @@ async def post_chat(
     )
     log.info("chat.request_received", message_length=len(body.message))
 
-    # -- Load context --
-    prior_messages, customer_history = await _load_history(db, user.user_id, session_id)
+    # -- Load customer context --
+    customer_history = await _load_customer_history(db, user.user_id, session_id)
 
-    # -- Build state --
-    state = create_initial_state(
-        user_id=user.user_id,
-        session_id=session_id,
-        user_role=user.role,
-        max_turns=settings.agent_max_turns,
-    )
-    state["messages"] = prior_messages + [HumanMessage(content=body.message)]
-    state["customer_history"] = customer_history
+    # -- Build turn input (checkpointer auto-loads prior messages + context_summary) --
+    graph_input = {
+        "messages": [HumanMessage(content=body.message)],
+        "user_id": str(user.user_id),
+        "session_id": session_id,
+        "user_role": user.role,
+        "max_turns": settings.agent_max_turns,
+        "customer_history": customer_history,
+        **_TURN_RESET,
+    }
 
     config = RunnableConfig(
         run_id=run_id,
@@ -292,11 +300,13 @@ async def post_chat(
             "customer_id": str(user.user_id),
             "session_id": session_id,
         },
+        configurable={"thread_id": session_id},
     )
 
     # -- Invoke agent --
+    agent_graph = request.app.state.graph
     try:
-        result = await graph.ainvoke(state, config=config)
+        result = await agent_graph.ainvoke(graph_input, config=config)
     except Exception as exc:
         log.error("chat.graph_invocation_failed", error=str(exc))
         raise HTTPException(
@@ -308,11 +318,7 @@ async def post_chat(
     ai_response = _extract_ai_response(result)
     intent: str = result.get("intent", "unknown")
 
-    # -- Persist turn to Redis --
-    await append_messages(
-        session_id,
-        [HumanMessage(content=body.message), AIMessage(content=ai_response)],
-    )
+    # -- Update Redis user-sessions sorted set (powers GET /chat/sessions) --
     await save_session_context(
         session_id,
         user_id=user.user_id,
@@ -335,6 +341,7 @@ async def post_chat(
 
 
 async def _stream_agent_response(
+    agent_graph,
     user_id: str,
     user_role,
     session_id: str,
@@ -345,21 +352,23 @@ async def _stream_agent_response(
     log = logger.bind(user_id=user_id, session_id=session_id, run_id=str(run_id))
 
     async with get_db_context() as db:
-        prior_messages, customer_history = await _load_history(db, user_id, session_id)
+        customer_history = await _load_customer_history(db, user_id, session_id)
 
-    state = create_initial_state(
-        user_id=user_id,
-        session_id=session_id,
-        user_role=user_role,
-        max_turns=settings.agent_max_turns,
-    )
-    state["messages"] = prior_messages + [HumanMessage(content=user_message)]
-    state["customer_history"] = customer_history
+    graph_input = {
+        "messages": [HumanMessage(content=user_message)],
+        "user_id": str(user_id),
+        "session_id": session_id,
+        "user_role": user_role,
+        "max_turns": settings.agent_max_turns,
+        "customer_history": customer_history,
+        **_TURN_RESET,
+    }
 
     config = RunnableConfig(
         run_id=run_id,
         tags=["production", "sse"],
         metadata={"customer_id": str(user_id), "session_id": session_id},
+        configurable={"thread_id": session_id},
     )
 
     streamed_tokens: list[str] = []
@@ -367,7 +376,7 @@ async def _stream_agent_response(
     final_state: dict = {}
 
     try:
-        async for event in graph.astream_events(state, config=config, version="v2"):
+        async for event in agent_graph.astream_events(graph_input, config=config, version="v2"):
             event_type: str = event.get("event", "")
             event_name: str = event.get("name", "")
             metadata: dict = event.get("metadata", {})
@@ -407,10 +416,6 @@ async def _stream_agent_response(
     else:
         ai_response = "I'm sorry, I couldn't generate a response. Please try again."
 
-    await append_messages(
-        session_id,
-        [HumanMessage(content=user_message), AIMessage(content=ai_response)],
-    )
     await save_session_context(session_id, user_id=user_id, intent=final_intent)
 
     yield f"data: {json.dumps({'type': 'done', 'message': ai_response, 'session_id': session_id, 'intent': final_intent, 'run_id': str(run_id)})}\n\n"
@@ -452,6 +457,7 @@ async def _stream_agent_response(
 )
 async def post_chat_stream(
     body: ChatRequest,
+    request: Request,
     user: CurrentUser,
 ) -> StreamingResponse:
     """Stream a single chat turn as Server-Sent Events."""
@@ -464,6 +470,7 @@ async def post_chat_stream(
 
     return StreamingResponse(
         _stream_agent_response(
+            agent_graph=request.app.state.graph,
             user_id=user.user_id,
             user_role=user.role,
             session_id=session_id,
@@ -494,14 +501,17 @@ async def post_chat_stream(
 )
 async def get_chat_history(
     session_id: str,
+    request: Request,
     user: CurrentUser,
     limit: Annotated[int, Query(ge=1, le=50, description="Max messages to return.")] = 20,
 ) -> HistoryResponse:
-    """Return recent messages for a session from Redis."""
+    """Return recent messages for a session from the LangGraph checkpoint."""
     log = logger.bind(user_id=user.user_id, session_id=session_id)
 
-    messages = await get_session_messages(session_id, limit=limit)
-    items = _messages_to_items(messages)
+    agent_graph = request.app.state.graph
+    snapshot = await agent_graph.aget_state({"configurable": {"thread_id": session_id}})
+    all_messages = (snapshot.values.get("messages") or []) if snapshot else []
+    items = _messages_to_items(all_messages[-limit:])
 
     log.info("chat.history_retrieved", count=len(items))
 
@@ -613,21 +623,22 @@ async def websocket_chat(
             log = log.bind(run_id=str(run_id))
             log.info("ws.turn_started", message_length=len(user_message))
 
-            # ---- Load context (new DB session per turn) ----
+            # ---- Load customer context (new DB session per turn) ----
             async with get_db_context() as db:
-                prior_messages, customer_history = await _load_history(
+                customer_history = await _load_customer_history(
                     db, user.user_id, session_id
                 )
 
-            # ---- Build state ----
-            state = create_initial_state(
-                user_id=user.user_id,
-                session_id=session_id,
-                user_role=user.role,
-                max_turns=settings.agent_max_turns,
-            )
-            state["messages"] = prior_messages + [HumanMessage(content=user_message)]
-            state["customer_history"] = customer_history
+            # ---- Build turn input (checkpointer loads prior messages automatically) ----
+            graph_input = {
+                "messages": [HumanMessage(content=user_message)],
+                "user_id": str(user.user_id),
+                "session_id": session_id,
+                "user_role": user.role,
+                "max_turns": settings.agent_max_turns,
+                "customer_history": customer_history,
+                **_TURN_RESET,
+            }
 
             config = RunnableConfig(
                 run_id=run_id,
@@ -636,15 +647,17 @@ async def websocket_chat(
                     "customer_id": str(user.user_id),
                     "session_id": session_id,
                 },
+                configurable={"thread_id": session_id},
             )
 
             # ---- Stream events ----
+            agent_graph = websocket.app.state.graph
             streamed_tokens: list[str] = []
             final_intent: str = "unknown"
             final_state: dict = {}
 
             try:
-                async for event in graph.astream_events(state, config=config, version="v2"):
+                async for event in agent_graph.astream_events(graph_input, config=config, version="v2"):
                     event_type: str = event.get("event", "")
                     event_name: str = event.get("name", "")
                     metadata: dict = event.get("metadata", {})
@@ -704,11 +717,7 @@ async def websocket_chat(
             else:
                 ai_response = "I'm sorry, I couldn't generate a response. Please try again."
 
-            # ---- Persist to Redis ----
-            await append_messages(
-                session_id,
-                [HumanMessage(content=user_message), AIMessage(content=ai_response)],
-            )
+            # ---- Update Redis user-sessions sorted set (powers GET /chat/sessions) ----
             await save_session_context(
                 session_id,
                 user_id=user.user_id,

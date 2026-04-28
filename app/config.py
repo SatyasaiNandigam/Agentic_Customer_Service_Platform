@@ -128,11 +128,21 @@ class Settings(BaseSettings):
     def is_development(self) -> bool:
         return self.environment == "development"
 
+    checkpoint_pool_min_size: int = 1
+    checkpoint_pool_max_size: int = 5
+
     @computed_field
     @property
     def database_url_str(self) -> str:
         """Return DATABASE_URL as a plain string for SQLAlchemy engine creation."""
         return str(self.database_url)
+
+    @computed_field
+    @property
+    def checkpoint_db_url(self) -> str:
+        """Plain libpq DSN for the psycopg3 pool used by AsyncPostgresSaver.
+        Strips the '+psycopg' SQLAlchemy dialect prefix."""
+        return str(self.database_url).replace("postgresql+psycopg://", "postgresql://", 1)
 
     @computed_field
     @property

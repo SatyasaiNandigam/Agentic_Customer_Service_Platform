@@ -6,9 +6,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from app.agent.state import AgentState
-from app.cache.redis_client import get_redis_context
 from app.config import get_settings
-from app.memory.short_term import save_session_context
 
 logger = structlog.get_logger(__name__)
 
@@ -183,7 +181,6 @@ async def maybe_summarize(state: AgentState) -> dict:
 
     messages: list[BaseMessage] = state.get("messages", [])
     session_id: str = state.get("session_id", "")
-    user_id: int = state.get("user_id", 0)
     existing_summary: str | None = state.get("context_summary")
 
     if len(messages) < MIN_MESSAGES_TO_SUMMARIZE:
@@ -219,13 +216,6 @@ async def maybe_summarize(state: AgentState) -> dict:
         combined_summary = f"{existing_summary}\n\n---\n\n{new_summary}"
     else:
         combined_summary = new_summary
-
-    # Persist the new summary text to Redis meta hash
-    await save_session_context(
-        session_id,
-        summary=combined_summary,
-        user_id=user_id,
-    )
 
     logger.info(
         "summarizer.complete",

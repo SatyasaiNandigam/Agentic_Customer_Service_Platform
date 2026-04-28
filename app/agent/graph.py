@@ -65,7 +65,7 @@ async def _stub_human_handoff(state: AgentState) -> dict:
     }
     
     
-def build_graph():
+def build_graph(checkpointer=None):
     """Build and compile the LangGraph StateGraph.
 
     Constructs the full agent workflow: registers every node (real + stubs),
@@ -146,7 +146,7 @@ def build_graph():
    
     workflow.add_edge(NODE_HUMAN_HANDOFF, END)
     
-    compiled = workflow.compile()
+    compiled = workflow.compile(checkpointer=checkpointer)
 
     logger.info(
         "graph.compiled",
@@ -167,4 +167,3 @@ def build_graph():
 
     return compiled
 
-graph = build_graph()
