@@ -1,0 +1,856 @@
+{
+  "run_metadata": {
+    "date": "2026-04-28",
+    "dataset_path": "eval\\datasets\\intent_classification.jsonl",
+    "total_cases": 240,
+    "model": "gpt-4o-mini",
+    "confidence_threshold": 0.5,
+    "concurrency": 10,
+    "duration_seconds": 35.8,
+    "errors": 42
+  },
+  "summary": {
+    "overall_accuracy": 0.7375,
+    "macro_f1": 0.7755,
+    "threshold": 0.9,
+    "passes_threshold": false
+  },
+  "per_intent": {
+    "order_status": {
+      "tp": 17,
+      "fp": 2,
+      "fn": 3,
+      "support": 20,
+      "precision": 0.8947,
+      "recall": 0.85,
+      "f1": 0.8718,
+      "accuracy": 0.85
+    },
+    "order_cancel": {
+      "tp": 16,
+      "fp": 1,
+      "fn": 3,
+      "support": 19,
+      "precision": 0.9412,
+      "recall": 0.8421,
+      "f1": 0.8889,
+      "accuracy": 0.8421
+    },
+    "shipment_tracking": {
+      "tp": 15,
+      "fp": 0,
+      "fn": 4,
+      "support": 19,
+      "precision": 1.0,
+      "recall": 0.7895,
+      "f1": 0.8824,
+      "accuracy": 0.7895
+    },
+    "refund_request": {
+      "tp": 19,
+      "fp": 0,
+      "fn": 0,
+      "support": 19,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "accuracy": 1.0
+    },
+    "refund_status": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 0,
+      "support": 18,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "accuracy": 1.0
+    },
+    "product_inquiry": {
+      "tp": 17,
+      "fp": 1,
+      "fn": 2,
+      "support": 19,
+      "precision": 0.9444,
+      "recall": 0.8947,
+      "f1": 0.9189,
+      "accuracy": 0.8947
+    },
+    "product_search": {
+      "tp": 18,
+      "fp": 1,
+      "fn": 1,
+      "support": 19,
+      "precision": 0.9474,
+      "recall": 0.9474,
+      "f1": 0.9474,
+      "accuracy": 0.9474
+    },
+    "account_info": {
+      "tp": 14,
+      "fp": 2,
+      "fn": 3,
+      "support": 17,
+      "precision": 0.875,
+      "recall": 0.8235,
+      "f1": 0.8485,
+      "accuracy": 0.8235
+    },
+    "review_lookup": {
+      "tp": 13,
+      "fp": 0,
+      "fn": 5,
+      "support": 18,
+      "precision": 1.0,
+      "recall": 0.7222,
+      "f1": 0.8387,
+      "accuracy": 0.7222
+    },
+    "faq_policy": {
+      "tp": 9,
+      "fp": 2,
+      "fn": 10,
+      "support": 19,
+      "precision": 0.8182,
+      "recall": 0.4737,
+      "f1": 0.6,
+      "accuracy": 0.4737
+    },
+    "chitchat": {
+      "tp": 5,
+      "fp": 3,
+      "fn": 11,
+      "support": 16,
+      "precision": 0.625,
+      "recall": 0.3125,
+      "f1": 0.4167,
+      "accuracy": 0.3125
+    },
+    "complaint": {
+      "tp": 13,
+      "fp": 0,
+      "fn": 14,
+      "support": 27,
+      "precision": 1.0,
+      "recall": 0.4815,
+      "f1": 0.65,
+      "accuracy": 0.4815
+    },
+    "unknown": {
+      "tp": 7,
+      "fp": 47,
+      "fn": 3,
+      "support": 10,
+      "precision": 0.1296,
+      "recall": 0.7,
+      "f1": 0.2188,
+      "accuracy": 0.7
+    }
+  },
+  "confidence_calibration": [
+    {
+      "bin_lower": 0.0,
+      "bin_upper": 0.2,
+      "count": 42,
+      "mean_confidence": 0.0,
+      "accuracy": 0.0,
+      "calibration_gap": 0.0
+    },
+    {
+      "bin_lower": 0.2,
+      "bin_upper": 0.4,
+      "count": 0,
+      "mean_confidence": null,
+      "accuracy": null,
+      "calibration_gap": null
+    },
+    {
+      "bin_lower": 0.4,
+      "bin_upper": 0.6,
+      "count": 6,
+      "mean_confidence": 0.4833,
+      "accuracy": 0.0,
+      "calibration_gap": 0.4833
+    },
+    {
+      "bin_lower": 0.6,
+      "bin_upper": 0.8,
+      "count": 2,
+      "mean_confidence": 0.6,
+      "accuracy": 0.5,
+      "calibration_gap": 0.1
+    },
+    {
+      "bin_lower": 0.8,
+      "bin_upper": 1.0,
+      "count": 190,
+      "mean_confidence": 0.9146,
+      "accuracy": 0.9263,
+      "calibration_gap": 0.0117
+    }
+  ],
+  "unknown_rejection": {
+    "false_rejection_rate": 0.2043,
+    "false_rejection_count": 47,
+    "total_valid_cases": 230,
+    "unknown_precision": 0.1296,
+    "unknown_recall": 0.7,
+    "passes_threshold": false
+  },
+  "boundary_pair_accuracy": {
+    "account_info|order_status": {
+      "accuracy": 1.0,
+      "count": 2,
+      "errors": 0
+    },
+    "complaint|chitchat": {
+      "accuracy": 0.3333,
+      "count": 3,
+      "errors": 2
+    },
+    "faq_policy|product_inquiry": {
+      "accuracy": 0.0,
+      "count": 2,
+      "errors": 2
+    },
+    "faq_policy|refund_request": {
+      "accuracy": 0.0,
+      "count": 1,
+      "errors": 1
+    },
+    "order_cancel|complaint": {
+      "accuracy": 0.5,
+      "count": 4,
+      "errors": 2
+    },
+    "order_cancel|refund_request": {
+      "accuracy": 0.5,
+      "count": 2,
+      "errors": 1
+    },
+    "order_status|shipment_tracking": {
+      "accuracy": 0.8,
+      "count": 5,
+      "errors": 1
+    },
+    "product_inquiry|faq_policy": {
+      "accuracy": 1.0,
+      "count": 2,
+      "errors": 0
+    },
+    "product_inquiry|product_search": {
+      "accuracy": 0.8333,
+      "count": 6,
+      "errors": 1
+    },
+    "refund_request|complaint": {
+      "accuracy": 0.5,
+      "count": 6,
+      "errors": 3
+    },
+    "refund_request|faq_policy": {
+      "accuracy": 1.0,
+      "count": 2,
+      "errors": 0
+    },
+    "refund_status|refund_request": {
+      "accuracy": 1.0,
+      "count": 5,
+      "errors": 0
+    },
+    "shipment_tracking|complaint": {
+      "accuracy": 0.8333,
+      "count": 6,
+      "errors": 1
+    },
+    "unknown|order_cancel": {
+      "accuracy": 0.5,
+      "count": 2,
+      "errors": 1
+    },
+    "unknown|order_status": {
+      "accuracy": 0.0,
+      "count": 1,
+      "errors": 1
+    },
+    "unknown|refund_request": {
+      "accuracy": 1.0,
+      "count": 1,
+      "errors": 0
+    },
+    "unknown|shipment_tracking": {
+      "accuracy": 0.0,
+      "count": 1,
+      "errors": 1
+    }
+  },
+  "failures": [
+    {
+      "id": "order_status_edge_004",
+      "text": "I placed an order Monday. Where is it now?",
+      "expected": "shipment_tracking",
+      "predicted": "order_status",
+      "confidence": 0.95,
+      "boundary_pair": "order_status|shipment_tracking",
+      "error": null
+    },
+    {
+      "id": "shipment_tracking_007",
+      "text": "What's the estimated delivery date for order 1055?",
+      "expected": "shipment_tracking",
+      "predicted": "order_status",
+      "confidence": 0.95,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "order_cancel_edge_003",
+      "text": "Cancel this order \u2014 it's the third time you've sent me the wrong thing.",
+      "expected": "complaint",
+      "predicted": "order_cancel",
+      "confidence": 0.95,
+      "boundary_pair": "order_cancel|complaint",
+      "error": null
+    },
+    {
+      "id": "product_search_edge_002",
+      "text": "Do you have AirPods in stock?",
+      "expected": "product_search",
+      "predicted": "product_inquiry",
+      "confidence": 0.9,
+      "boundary_pair": "product_inquiry|product_search",
+      "error": null
+    },
+    {
+      "id": "complaint_004",
+      "text": "I want to speak to a human agent.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.9,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "review_lookup_009",
+      "text": "How many products have I reviewed?",
+      "expected": "review_lookup",
+      "predicted": "account_info",
+      "confidence": 0.88,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "order_status_004",
+      "text": "Show me all my recent orders.",
+      "expected": "order_status",
+      "predicted": "account_info",
+      "confidence": 0.85,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "order_cancel_015",
+      "text": "How do I cancel my order?",
+      "expected": "order_cancel",
+      "predicted": "faq_policy",
+      "confidence": 0.85,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "product_inquiry_001",
+      "text": "Do you sell wireless headphones?",
+      "expected": "product_inquiry",
+      "predicted": "product_search",
+      "confidence": 0.85,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "account_info_011",
+      "text": "How do I change my password?",
+      "expected": "account_info",
+      "predicted": "faq_policy",
+      "confidence": 0.85,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "chitchat_008",
+      "text": "What's the weather like?",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.85,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "unknown_006",
+      "text": "Can you explain quantum physics to me?",
+      "expected": "unknown",
+      "predicted": "chitchat",
+      "confidence": 0.85,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "unknown_008",
+      "text": "Tell me a bedtime story.",
+      "expected": "unknown",
+      "predicted": "chitchat",
+      "confidence": 0.85,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "unknown_010",
+      "text": "I'm bored",
+      "expected": "unknown",
+      "predicted": "chitchat",
+      "confidence": 0.85,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "order_cancel_edge_004",
+      "text": "Can I cancel my order and get a refund at the same time?",
+      "expected": "order_cancel",
+      "predicted": "unknown",
+      "confidence": 0.6,
+      "boundary_pair": "order_cancel|refund_request",
+      "error": null
+    },
+    {
+      "id": "order_status_010",
+      "text": "order status plz",
+      "expected": "order_status",
+      "predicted": "unknown",
+      "confidence": 0.5,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "shipment_tracking_013",
+      "text": "wheres my stuff",
+      "expected": "shipment_tracking",
+      "predicted": "unknown",
+      "confidence": 0.5,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "account_info_002",
+      "text": "Can you update my shipping address?",
+      "expected": "account_info",
+      "predicted": "unknown",
+      "confidence": 0.5,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "account_info_edge_001",
+      "text": "my stuff?",
+      "expected": "order_status",
+      "predicted": "unknown",
+      "confidence": 0.5,
+      "boundary_pair": "unknown|order_status",
+      "error": null
+    },
+    {
+      "id": "unknown_edge_002",
+      "text": "cancel",
+      "expected": "order_cancel",
+      "predicted": "unknown",
+      "confidence": 0.5,
+      "boundary_pair": "unknown|order_cancel",
+      "error": null
+    },
+    {
+      "id": "account_info_015",
+      "text": "acct info",
+      "expected": "account_info",
+      "predicted": "unknown",
+      "confidence": 0.4,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "review_lookup_014",
+      "text": "Did I leave positive or negative feedback on the Samsung TV?",
+      "expected": "review_lookup",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "review_lookup_015",
+      "text": "Can I edit a review I left before?",
+      "expected": "review_lookup",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "review_lookup_edge_001",
+      "text": "Show me reviews for the Nike Air Max.",
+      "expected": "review_lookup",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "review_lookup_edge_003",
+      "text": "Can I see my personal review for the Sony headphones?",
+      "expected": "review_lookup",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_002",
+      "text": "How do I return an item?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_004",
+      "text": "What payment methods do you accept?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_010",
+      "text": "Do you ship internationally?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_011",
+      "text": "What are your store hours?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_012",
+      "text": "How do I use a promo code?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_013",
+      "text": "Is my order covered by purchase protection?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_014",
+      "text": "Can I return something I bought on sale?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_015",
+      "text": "What is your privacy policy?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_edge_001",
+      "text": "What warranty comes with the Samsung Galaxy S24?",
+      "expected": "product_inquiry",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "faq_policy|product_inquiry",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_edge_002",
+      "text": "What is your warranty policy for electronics?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "faq_policy|product_inquiry",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_edge_003",
+      "text": "How do I get a refund for a defective product?",
+      "expected": "faq_policy",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "faq_policy|refund_request",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_001",
+      "text": "Hello!",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_004",
+      "text": "Thank you, that was helpful!",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_007",
+      "text": "Thanks for your help!",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_009",
+      "text": "Are you a real person or a bot?",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_011",
+      "text": "That's all I needed, bye!",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_012",
+      "text": "How are you doing today?",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_013",
+      "text": "Can you speak Spanish?",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_014",
+      "text": "You've been so helpful, seriously thank you.",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_edge_001",
+      "text": "Honestly your site is a bit confusing but I got there eventually.",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "complaint|chitchat",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_edge_002",
+      "text": "Not the fastest delivery but it got here.",
+      "expected": "chitchat",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "complaint|chitchat",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_001",
+      "text": "I am extremely frustrated. This is the third time my order arrived damaged.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_002",
+      "text": "Your customer service is terrible.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_003",
+      "text": "This is unacceptable. I want compensation.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_009",
+      "text": "I am so disappointed in this company.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_011",
+      "text": "This is my second complaint and nothing has been resolved. I want a manager.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_014",
+      "text": "I'm very unhappy with how this was handled.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_015",
+      "text": "This keeps happening and I'm fed up.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_edge_001",
+      "text": "I'm absolutely furious. I want my $200 back right now.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "refund_request|complaint",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_edge_002",
+      "text": "I've called three times and nobody helps me. Can you at least track my package?",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "shipment_tracking|complaint",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_edge_003",
+      "text": "This is the third time I've been sent a broken item. I want a full refund and a manager.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "refund_request|complaint",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_edge_004",
+      "text": "I want to cancel and I'm furious that I can't find the cancel button on your website.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "order_cancel|complaint",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "complaint_edge_005",
+      "text": "This is unacceptable \u2014 my third damaged item in a row.",
+      "expected": "complaint",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "refund_request|complaint",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_001",
+      "text": "asdfghjkl",
+      "expected": "unknown",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_002",
+      "text": "42",
+      "expected": "unknown",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_003",
+      "text": "Can you help me build a website?",
+      "expected": "unknown",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_004",
+      "text": "What is the capital of France?",
+      "expected": "unknown",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_edge_001",
+      "text": "track",
+      "expected": "shipment_tracking",
+      "predicted": "unknown",
+      "confidence": 0.0,
+      "boundary_pair": "unknown|shipment_tracking",
+      "error": "classifier_fallback"
+    }
+  ]
+}

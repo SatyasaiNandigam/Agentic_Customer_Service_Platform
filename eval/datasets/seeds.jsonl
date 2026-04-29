@@ -1,0 +1,49 @@
+{"id": "order_status_001", "text": "What is the status of my order?", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_status_002", "text": "Can you check on order #1042?", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_status_003", "text": "I placed an order yesterday, where is it?", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_status_004", "text": "Show me all my recent orders.", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_status_005", "text": "What happened to my last order?", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_001", "text": "Where is my package?", "expected": "shipment_tracking", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_002", "text": "Can you give me the tracking number for order #1042?", "expected": "shipment_tracking", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_003", "text": "My delivery is late. When will it arrive?", "expected": "shipment_tracking", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_004", "text": "What carrier is handling my shipment?", "expected": "shipment_tracking", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_001", "text": "I want to cancel my order.", "expected": "order_cancel", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_002", "text": "Cancel order #1055 for me.", "expected": "order_cancel", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_003", "text": "Can I still cancel my order? It was placed an hour ago.", "expected": "order_cancel", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_004", "text": "I accidentally ordered twice. Please cancel the duplicate.", "expected": "order_cancel", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "refund_request_001", "text": "I want a refund.", "expected": "refund_request", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "refund_request_002", "text": "Please initiate a refund for order #1042.", "expected": "refund_request", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "refund_request_003", "text": "I want a partial refund of $25 for my order.", "expected": "refund_request", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "refund_status_001", "text": "What is the status of my refund?", "expected": "refund_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "refund_status_002", "text": "Has my refund for order #1042 been approved?", "expected": "refund_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "refund_status_003", "text": "When will I get my money back?", "expected": "refund_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "refund_status_004", "text": "My refund was supposed to arrive 5 days ago.", "expected": "refund_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_001", "text": "Do you sell wireless headphones?", "expected": "product_inquiry", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_002", "text": "Tell me more about the Sony WH-1000XM5.", "expected": "product_inquiry", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_003", "text": "What sizes does the Nike Air Max come in?", "expected": "product_inquiry", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_004", "text": "Is the blue version of this item in stock?", "expected": "product_inquiry", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "product_search_001", "text": "Show me laptops under $800.", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "product_search_002", "text": "I'm looking for gifts for kids under 10.", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "product_search_003", "text": "Do you have any deals on running shoes?", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "product_search_004", "text": "What are your best-selling items right now?", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "product_search_005", "text": "Find me a gaming chair from DXRacer.", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "account_info_001", "text": "What email is on my account?", "expected": "account_info", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "account_info_002", "text": "Can you update my shipping address?", "expected": "account_info", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "account_info_003", "text": "What are my saved payment methods?", "expected": "account_info", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "account_info_004", "text": "How many orders have I placed in total?", "expected": "account_info", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_001", "text": "Have I left any reviews before?", "expected": "review_lookup", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_002", "text": "What did I rate the Sony headphones?", "expected": "review_lookup", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_001", "text": "What is your return policy?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_002", "text": "How do I return an item?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_003", "text": "Do you offer price matching?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_004", "text": "What payment methods do you accept?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_005", "text": "Can I exchange an item instead of returning it?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_006", "text": "Is there free shipping on orders over $50?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "complaint_001", "text": "I am extremely frustrated. This is the third time my order arrived damaged.", "expected": "complaint", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "complaint_002", "text": "Your customer service is terrible.", "expected": "complaint", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "complaint_003", "text": "This is unacceptable. I want compensation.", "expected": "complaint", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "chitchat_001", "text": "Hello!", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "chitchat_002", "text": "Who are you?", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "chitchat_003", "text": "What can you help me with?", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "chitchat_004", "text": "Thank you, that was helpful!", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "chitchat_005", "text": "Tell me a joke.", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": null}

@@ -12,3 +12,4 @@ wheels/
 .env
 
 *.md
+!README.md

@@ -1,0 +1,240 @@
+{"id": "order_status_001", "text": "What is the status of my order?", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": "no order ID"}
+{"id": "order_status_002", "text": "Can you check on order #1042?", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": "specific order lookup"}
+{"id": "order_status_003", "text": "I placed an order yesterday, where is it?", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": "vague reference"}
+{"id": "order_status_004", "text": "Show me all my recent orders.", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": "list view"}
+{"id": "order_status_005", "text": "What happened to my last order?", "expected": "order_status", "source": "seed", "boundary_pair": null, "notes": "implicit last order"}
+{"id": "order_status_006", "text": "Is my order being processed yet?", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_status_007", "text": "Can u tell me where order 1042 is at rn", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": "text-speak"}
+{"id": "order_status_008", "text": "I need an update on my purchase from last week.", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_status_009", "text": "Has my order shipped yet?", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_status_010", "text": "order status plz", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": "terse"}
+{"id": "order_status_011", "text": "Could you please provide me with a comprehensive update on all of my outstanding orders at this time?", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": "formal/long"}
+{"id": "order_status_012", "text": "I made a purchase 3 days ago and haven't heard anything, what's going on?", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_status_013", "text": "My ordr #2210 — any updates?", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": "typo"}
+{"id": "order_status_014", "text": "What is the current state of my order #1055?", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_status_015", "text": "Did my order go through? I never got a confirmation email.", "expected": "order_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_status_edge_001", "text": "My order #1042 shipped 3 days ago but the tracking page says it's still in transit — what's the actual status?", "expected": "order_status", "source": "edge", "boundary_pair": "order_status|shipment_tracking", "notes": "mentions tracking but the question is about order state"}
+{"id": "order_status_edge_002", "text": "What is the current status of order #1042?", "expected": "order_status", "source": "edge", "boundary_pair": "order_status|shipment_tracking", "notes": "could be either; 'status' leans order_status"}
+{"id": "order_status_edge_003", "text": "Order #1042 says 'processing' but it should have been shipped by now.", "expected": "order_status", "source": "edge", "boundary_pair": "order_status|shipment_tracking", "notes": "checking order processing state, not location"}
+{"id": "order_status_edge_004", "text": "I placed an order Monday. Where is it now?", "expected": "shipment_tracking", "source": "edge", "boundary_pair": "order_status|shipment_tracking", "notes": "'where is it now' signals location/tracking"}
+{"id": "order_status_edge_005", "text": "My order hasn't updated in days and I'm wondering if something went wrong.", "expected": "order_status", "source": "edge", "boundary_pair": "order_status|shipment_tracking", "notes": "order lifecycle concern, not tracking location"}
+{"id": "shipment_tracking_001", "text": "Where is my package?", "expected": "shipment_tracking", "source": "seed", "boundary_pair": null, "notes": "generic location query"}
+{"id": "shipment_tracking_002", "text": "Can you give me the tracking number for order #1042?", "expected": "shipment_tracking", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_003", "text": "My delivery is late. When will it arrive?", "expected": "shipment_tracking", "source": "seed", "boundary_pair": null, "notes": "ETA query"}
+{"id": "shipment_tracking_004", "text": "What carrier is handling my shipment?", "expected": "shipment_tracking", "source": "seed", "boundary_pair": null, "notes": "carrier detail"}
+{"id": "shipment_tracking_005", "text": "Track my package for me please.", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_006", "text": "Is my package out for delivery today?", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_007", "text": "What's the estimated delivery date for order 1055?", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_008", "text": "tracking info for my last order", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": "terse"}
+{"id": "shipment_tracking_009", "text": "Where exactly is my parcel right now?", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_010", "text": "My shipment was supposed to arrive Friday — can you see where it's stuck?", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_011", "text": "I need to know which courier has my package and when they plan to deliver.", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": "long/formal"}
+{"id": "shipment_tracking_012", "text": "Can I get live tracking for order #2210?", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_013", "text": "wheres my stuff", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": "very terse colloquial"}
+{"id": "shipment_tracking_014", "text": "Has my package left the warehouse yet?", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_015", "text": "I want to know the transit status of my shipment.", "expected": "shipment_tracking", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "shipment_tracking_edge_001", "text": "I got a notification that my package was delivered but I never received it.", "expected": "complaint", "source": "edge", "boundary_pair": "shipment_tracking|complaint", "notes": "Q10 from TEST_QUESTIONS — implied wrongdoing pushes to complaint"}
+{"id": "shipment_tracking_edge_002", "text": "Where is my package? It was supposed to arrive yesterday.", "expected": "shipment_tracking", "source": "edge", "boundary_pair": "shipment_tracking|complaint", "notes": "mild urgency, still a tracking lookup"}
+{"id": "shipment_tracking_edge_003", "text": "My package was supposedly delivered two weeks ago and I still don't have it. This is a nightmare.", "expected": "complaint", "source": "edge", "boundary_pair": "shipment_tracking|complaint", "notes": "strong emotional language + 'nightmare' → complaint"}
+{"id": "shipment_tracking_edge_004", "text": "Your tracking page says delivered but nothing is here. What's going on?", "expected": "complaint", "source": "edge", "boundary_pair": "shipment_tracking|complaint", "notes": "accusatory framing → complaint"}
+{"id": "shipment_tracking_edge_005", "text": "Could you please check the current location of my parcel? It left the sorting facility on Monday.", "expected": "shipment_tracking", "source": "edge", "boundary_pair": "shipment_tracking|complaint", "notes": "neutral, factual — pure tracking"}
+{"id": "order_cancel_001", "text": "I want to cancel my order.", "expected": "order_cancel", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_002", "text": "Cancel order #1055 for me.", "expected": "order_cancel", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_003", "text": "Can I still cancel my order? It was placed an hour ago.", "expected": "order_cancel", "source": "seed", "boundary_pair": null, "notes": "eligibility check"}
+{"id": "order_cancel_004", "text": "I accidentally ordered twice. Please cancel the duplicate.", "expected": "order_cancel", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_005", "text": "I no longer need this item, please cancel it.", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_006", "text": "cancel order 1042 pls", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": "terse"}
+{"id": "order_cancel_007", "text": "I'd like to cancel my purchase before it ships.", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_008", "text": "Please stop my order from being processed.", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_009", "text": "I changed my mind and want to cancel everything in my cart that was just placed.", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_010", "text": "Can you help me cancel order number 2210? I ordered the wrong size.", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_011", "text": "wanna cancel", "expected": "order_cancel", "source": "edge", "boundary_pair": "unknown|order_cancel", "notes": "terse colloquial — should NOT be unknown"}
+{"id": "order_cancel_012", "text": "Is it too late to pull the plug on my order?", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": "idiomatic"}
+{"id": "order_cancel_013", "text": "I need to cancel immediately — please don't ship it.", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": "urgency"}
+{"id": "order_cancel_014", "text": "Please help me with cancelling order #1042 placed yesterday", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "order_cancel_015", "text": "How do I cancel my order?", "expected": "order_cancel", "source": "paraphrase", "boundary_pair": null, "notes": "process question but clearly cancel intent"}
+{"id": "order_cancel_edge_001", "text": "I want to cancel and I'm furious that I can't find the cancel button anywhere on your website.", "expected": "complaint", "source": "edge", "boundary_pair": "order_cancel|complaint", "notes": "cancel intent + strong frustration → complaint wins per escalation rule"}
+{"id": "order_cancel_edge_002", "text": "I would like to cancel order #1055, please.", "expected": "order_cancel", "source": "edge", "boundary_pair": "order_cancel|complaint", "notes": "polite, no escalation signals"}
+{"id": "order_cancel_edge_003", "text": "Cancel this order — it's the third time you've sent me the wrong thing.", "expected": "complaint", "source": "edge", "boundary_pair": "order_cancel|complaint", "notes": "repeated issue → escalation dominant"}
+{"id": "order_cancel_edge_004", "text": "Can I cancel my order and get a refund at the same time?", "expected": "order_cancel", "source": "edge", "boundary_pair": "order_cancel|refund_request", "notes": "cancel is the primary action; refund is implied"}
+{"id": "order_cancel_edge_005", "text": "I accidentally placed an order. Please cancel it and refund my card.", "expected": "order_cancel", "source": "edge", "boundary_pair": "order_cancel|refund_request", "notes": "cancel-first intent; refund is secondary"}
+{"id": "refund_request_001", "text": "I want a refund.", "expected": "refund_request", "source": "seed", "boundary_pair": null, "notes": "generic"}
+{"id": "refund_request_002", "text": "Please initiate a refund for order #1042.", "expected": "refund_request", "source": "seed", "boundary_pair": null, "notes": "direct with order ID"}
+{"id": "refund_request_003", "text": "I want a partial refund of $25 for my order.", "expected": "refund_request", "source": "seed", "boundary_pair": null, "notes": "partial refund"}
+{"id": "refund_request_004", "text": "I'd like to return this and get my money back.", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_request_005", "text": "Please process a refund for my damaged item.", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_request_006", "text": "refund pls", "expected": "refund_request", "source": "edge", "boundary_pair": "unknown|refund_request", "notes": "text-speak brevity — should NOT be unknown"}
+{"id": "refund_request_007", "text": "The item arrived broken. Please refund me.", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_request_008", "text": "I'd like to request a refund for order #1042 — the size was wrong.", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_request_009", "text": "Can you start the refund process for me?", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_request_010", "text": "I need to get my money back for this purchase.", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_request_011", "text": "The product didn't match the description. I want a full refund.", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_request_012", "text": "My order never arrived and I want a refund please.", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_request_013", "text": "Can I get reimbursed for the extra charges on my last order?", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_request_014", "text": "Initiate refund for #2210", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": "terse"}
+{"id": "refund_request_015", "text": "I am requesting a full refund for order #1042 as the item was not as described.", "expected": "refund_request", "source": "paraphrase", "boundary_pair": null, "notes": "formal"}
+{"id": "refund_request_edge_001", "text": "I'm absolutely furious. I want my $200 back right now.", "expected": "complaint", "source": "edge", "boundary_pair": "refund_request|complaint", "notes": "emotional register dominant → complaint"}
+{"id": "refund_request_edge_002", "text": "This is the third time I've been sent a broken item. I want a full refund and I want a manager.", "expected": "complaint", "source": "edge", "boundary_pair": "refund_request|complaint", "notes": "explicit escalation + refund → escalation wins"}
+{"id": "refund_request_edge_003", "text": "The item arrived broken. Please refund me.", "expected": "refund_request", "source": "edge", "boundary_pair": "refund_request|complaint", "notes": "factual, no emotional escalation"}
+{"id": "refund_request_edge_004", "text": "I want to return this item and receive a refund. I know it's within your 30-day window.", "expected": "refund_request", "source": "edge", "boundary_pair": "refund_request|faq_policy", "notes": "actionable refund, not a policy question"}
+{"id": "refund_request_edge_005", "text": "How do I get a refund for a defective product?", "expected": "faq_policy", "source": "edge", "boundary_pair": "refund_request|faq_policy", "notes": "asking the process/policy, not initiating one"}
+{"id": "refund_status_001", "text": "What is the status of my refund?", "expected": "refund_status", "source": "seed", "boundary_pair": null, "notes": "generic"}
+{"id": "refund_status_002", "text": "Has my refund for order #1042 been approved?", "expected": "refund_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "refund_status_003", "text": "When will I get my money back?", "expected": "refund_status", "source": "seed", "boundary_pair": null, "notes": "urgency tone"}
+{"id": "refund_status_004", "text": "My refund was supposed to arrive 5 days ago.", "expected": "refund_status", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "refund_status_005", "text": "Has my refund been processed yet?", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_status_006", "text": "I requested a refund last week — has it gone through?", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_status_007", "text": "Any update on my refund?", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": "terse"}
+{"id": "refund_status_008", "text": "I submitted a refund request 3 days ago. Is it still pending?", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_status_009", "text": "Where is my refund? I need it urgently.", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_status_010", "text": "Can you check if my refund has been issued?", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_status_011", "text": "My refund from two weeks ago still hasn't appeared in my account.", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_status_012", "text": "I'm waiting on a $150 refund, can you give me a timeline?", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_status_013", "text": "Did you guys send my refund already?", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_status_014", "text": "Has the refund for order #2210 been credited back?", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "refund_status_015", "text": "refund status for order 1042", "expected": "refund_status", "source": "paraphrase", "boundary_pair": null, "notes": "terse"}
+{"id": "refund_status_edge_001", "text": "I requested a refund last week — has it gone through?", "expected": "refund_status", "source": "edge", "boundary_pair": "refund_status|refund_request", "notes": "past tense inquiry → status"}
+{"id": "refund_status_edge_002", "text": "I want to start a refund for my order.", "expected": "refund_request", "source": "edge", "boundary_pair": "refund_status|refund_request", "notes": "'start a refund' → request, not status"}
+{"id": "refund_status_edge_003", "text": "My refund from two weeks ago still hasn't appeared.", "expected": "refund_status", "source": "edge", "boundary_pair": "refund_status|refund_request", "notes": "existing refund follow-up → status"}
+{"id": "refund_status_edge_004", "text": "I need to return this and get my money back.", "expected": "refund_request", "source": "edge", "boundary_pair": "refund_status|refund_request", "notes": "initiating a return → request"}
+{"id": "refund_status_edge_005", "text": "You approved my refund last week — when does it actually hit my account?", "expected": "refund_status", "source": "edge", "boundary_pair": "refund_status|refund_request", "notes": "approved already, asking for timeline → status"}
+{"id": "product_inquiry_001", "text": "Do you sell wireless headphones?", "expected": "product_inquiry", "source": "seed", "boundary_pair": null, "notes": "category search"}
+{"id": "product_inquiry_002", "text": "Tell me more about the Sony WH-1000XM5.", "expected": "product_inquiry", "source": "seed", "boundary_pair": null, "notes": "specific product detail"}
+{"id": "product_inquiry_003", "text": "What sizes does the Nike Air Max come in?", "expected": "product_inquiry", "source": "seed", "boundary_pair": null, "notes": "variant/attribute"}
+{"id": "product_inquiry_004", "text": "Is the blue version of this item in stock?", "expected": "product_inquiry", "source": "seed", "boundary_pair": null, "notes": "variant availability"}
+{"id": "product_inquiry_005", "text": "What battery life does the Sony WH-1000XM5 have?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": "specific attribute on known item"}
+{"id": "product_inquiry_006", "text": "What are the specs on the MacBook Pro M4?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_007", "text": "Does the Samsung TV support 4K HDR?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_008", "text": "Is the DXRacer gaming chair adjustable?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_009", "text": "What material is the Nike Air Max made of?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_010", "text": "Are these headphones compatible with Android?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_011", "text": "How much does the Sony WH-1000XM5 weigh?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_012", "text": "Does this laptop come with Windows pre-installed?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_013", "text": "What colors does the Galaxy S24 come in?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_014", "text": "Tell me about the features of your best-selling gaming mouse.", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_015", "text": "Is the AirPods Pro 2 waterproof?", "expected": "product_inquiry", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_inquiry_edge_001", "text": "Does the AirPods Pro 2 support spatial audio?", "expected": "product_inquiry", "source": "edge", "boundary_pair": "product_inquiry|product_search", "notes": "specific attribute on a known item → inquiry"}
+{"id": "product_inquiry_edge_002", "text": "Do you carry AirPods?", "expected": "product_search", "source": "edge", "boundary_pair": "product_inquiry|product_search", "notes": "existence/availability query → search"}
+{"id": "product_inquiry_edge_003", "text": "What warranty does the Samsung Galaxy S24 come with?", "expected": "product_inquiry", "source": "edge", "boundary_pair": "product_inquiry|faq_policy", "notes": "product-level spec (warranty on specific product) → inquiry"}
+{"id": "product_inquiry_edge_004", "text": "What is your warranty policy for electronics?", "expected": "faq_policy", "source": "edge", "boundary_pair": "product_inquiry|faq_policy", "notes": "store-wide policy, not a product spec → faq_policy"}
+{"id": "product_search_001", "text": "Show me laptops under $800.", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": "price filter"}
+{"id": "product_search_002", "text": "I'm looking for gifts for kids under 10.", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": "category + audience"}
+{"id": "product_search_003", "text": "Do you have any deals on running shoes?", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": "discount filter"}
+{"id": "product_search_004", "text": "What are your best-selling items right now?", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": "popularity sort"}
+{"id": "product_search_005", "text": "Find me a gaming chair from DXRacer.", "expected": "product_search", "source": "seed", "boundary_pair": null, "notes": "brand filter"}
+{"id": "product_search_006", "text": "Show me noise-cancelling headphones under $100.", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_search_007", "text": "What wireless earbuds do you have?", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": "category browse"}
+{"id": "product_search_008", "text": "I need a birthday gift for a teenager, any ideas?", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_search_009", "text": "Search for 4K TVs in my budget of $500.", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_search_010", "text": "Any new arrivals in the sneakers category?", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_search_011", "text": "I'm looking for a standing desk under $300.", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_search_012", "text": "Show me all Nike products you carry.", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_search_013", "text": "Recommend something for home office setup.", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_search_014", "text": "Do you have organic cotton t-shirts?", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_search_015", "text": "Find me the cheapest laptop you carry.", "expected": "product_search", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "product_search_edge_001", "text": "Show me noise-cancelling headphones under $100.", "expected": "product_search", "source": "edge", "boundary_pair": "product_inquiry|product_search", "notes": "browse with filters → search"}
+{"id": "product_search_edge_002", "text": "Do you have AirPods in stock?", "expected": "product_search", "source": "edge", "boundary_pair": "product_inquiry|product_search", "notes": "availability/existence check → search not inquiry"}
+{"id": "product_search_edge_003", "text": "I'm looking for something similar to the Sony WH-1000XM5 but cheaper.", "expected": "product_search", "source": "edge", "boundary_pair": "product_inquiry|product_search", "notes": "browse with reference item → search"}
+{"id": "product_search_edge_004", "text": "What's the difference between the Sony WH-1000XM5 and the Bose QC45?", "expected": "product_inquiry", "source": "edge", "boundary_pair": "product_inquiry|product_search", "notes": "comparing specific known products → inquiry"}
+{"id": "account_info_001", "text": "What email is on my account?", "expected": "account_info", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "account_info_002", "text": "Can you update my shipping address?", "expected": "account_info", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "account_info_003", "text": "What are my saved payment methods?", "expected": "account_info", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "account_info_004", "text": "How many orders have I placed in total?", "expected": "account_info", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "account_info_005", "text": "What's my loyalty points balance?", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "account_info_006", "text": "Can I see my account details?", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "account_info_007", "text": "What name is registered on my account?", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "account_info_008", "text": "Show me my purchase history.", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "account_info_009", "text": "Is my phone number on file correct?", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "account_info_010", "text": "What card do I have saved for payments?", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "account_info_011", "text": "How do I change my password?", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "account_info_012", "text": "What's the shipping address saved on my profile?", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "account_info_013", "text": "Tell me about my account.", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": "generic account query"}
+{"id": "account_info_014", "text": "I need to update my contact information.", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "account_info_015", "text": "acct info", "expected": "account_info", "source": "paraphrase", "boundary_pair": null, "notes": "terse abbreviation"}
+{"id": "account_info_edge_001", "text": "my stuff?", "expected": "order_status", "source": "edge", "boundary_pair": "unknown|order_status", "notes": "colloquial — should resolve to order context, not unknown"}
+{"id": "account_info_edge_002", "text": "Have I bought from you before?", "expected": "account_info", "source": "edge", "boundary_pair": "account_info|order_status", "notes": "purchase history → account_info"}
+{"id": "account_info_edge_003", "text": "What have I ordered in the past 6 months?", "expected": "account_info", "source": "edge", "boundary_pair": "account_info|order_status", "notes": "historical orders → account_info not order_status"}
+{"id": "review_lookup_001", "text": "Have I left any reviews before?", "expected": "review_lookup", "source": "seed", "boundary_pair": null, "notes": "user review history"}
+{"id": "review_lookup_002", "text": "What did I rate the Sony headphones?", "expected": "review_lookup", "source": "seed", "boundary_pair": null, "notes": "specific product review"}
+{"id": "review_lookup_003", "text": "Can I see reviews I've written?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_004", "text": "Did I review order #1042?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_005", "text": "Show me my review for the DXRacer chair.", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_006", "text": "What star rating did I give the MacBook Pro?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_007", "text": "I left a review last month — can you find it?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_008", "text": "Show me all my past reviews.", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_009", "text": "How many products have I reviewed?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_010", "text": "Can you pull up the review I left for Nike Air Max?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_011", "text": "my reviews", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": "terse"}
+{"id": "review_lookup_012", "text": "I wrote a review for a headset a while ago, can you find it?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_013", "text": "What review did I leave for the running shoes I bought in January?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_014", "text": "Did I leave positive or negative feedback on the Samsung TV?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_015", "text": "Can I edit a review I left before?", "expected": "review_lookup", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "review_lookup_edge_001", "text": "Show me reviews for the Nike Air Max.", "expected": "review_lookup", "source": "edge", "boundary_pair": null, "notes": "public product reviews → review_lookup (get_reviews tool handles both public and personal)"}
+{"id": "review_lookup_edge_002", "text": "What are customers saying about the Sony WH-1000XM5?", "expected": "review_lookup", "source": "edge", "boundary_pair": null, "notes": "public reviews → review_lookup"}
+{"id": "review_lookup_edge_003", "text": "Can I see my personal review for the Sony headphones?", "expected": "review_lookup", "source": "edge", "boundary_pair": null, "notes": "personal review lookup"}
+{"id": "faq_policy_001", "text": "What is your return policy?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_002", "text": "How do I return an item?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_003", "text": "Do you offer price matching?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_004", "text": "What payment methods do you accept?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_005", "text": "Can I exchange an item instead of returning it?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_006", "text": "Is there free shipping on orders over $50?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_007", "text": "How long do I have to return an item?", "expected": "faq_policy", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_008", "text": "How long does a refund take?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": "Q17 from TEST_QUESTIONS — policy question not a request"}
+{"id": "faq_policy_009", "text": "What is your return policy for electronics?", "expected": "faq_policy", "source": "seed", "boundary_pair": null, "notes": "Q26 from TEST_QUESTIONS — store policy not product spec"}
+{"id": "faq_policy_010", "text": "Do you ship internationally?", "expected": "faq_policy", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_011", "text": "What are your store hours?", "expected": "faq_policy", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_012", "text": "How do I use a promo code?", "expected": "faq_policy", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_013", "text": "Is my order covered by purchase protection?", "expected": "faq_policy", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_014", "text": "Can I return something I bought on sale?", "expected": "faq_policy", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_015", "text": "What is your privacy policy?", "expected": "faq_policy", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "faq_policy_edge_001", "text": "What warranty comes with the Samsung Galaxy S24?", "expected": "product_inquiry", "source": "edge", "boundary_pair": "faq_policy|product_inquiry", "notes": "product-level warranty spec → inquiry"}
+{"id": "faq_policy_edge_002", "text": "What is your warranty policy for electronics?", "expected": "faq_policy", "source": "edge", "boundary_pair": "faq_policy|product_inquiry", "notes": "store-wide policy → faq_policy"}
+{"id": "faq_policy_edge_003", "text": "How do I get a refund for a defective product?", "expected": "faq_policy", "source": "edge", "boundary_pair": "faq_policy|refund_request", "notes": "asking the refund process, not initiating one"}
+{"id": "chitchat_001", "text": "Hello!", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": "greeting"}
+{"id": "chitchat_002", "text": "Who are you?", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": null}
+{"id": "chitchat_003", "text": "What can you help me with?", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": "capability discovery"}
+{"id": "chitchat_004", "text": "Thank you, that was helpful!", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": "positive closure"}
+{"id": "chitchat_005", "text": "Tell me a joke.", "expected": "chitchat", "source": "seed", "boundary_pair": null, "notes": "off-topic"}
+{"id": "chitchat_006", "text": "Hey there!", "expected": "chitchat", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "chitchat_007", "text": "Thanks for your help!", "expected": "chitchat", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "chitchat_008", "text": "What's the weather like?", "expected": "chitchat", "source": "paraphrase", "boundary_pair": null, "notes": "off-topic"}
+{"id": "chitchat_009", "text": "Are you a real person or a bot?", "expected": "chitchat", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "chitchat_010", "text": "Good morning!", "expected": "chitchat", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "chitchat_011", "text": "That's all I needed, bye!", "expected": "chitchat", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "chitchat_012", "text": "How are you doing today?", "expected": "chitchat", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "chitchat_013", "text": "Can you speak Spanish?", "expected": "chitchat", "source": "paraphrase", "boundary_pair": null, "notes": "capability question"}
+{"id": "chitchat_014", "text": "You've been so helpful, seriously thank you.", "expected": "chitchat", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "chitchat_edge_001", "text": "Honestly your site is a bit confusing but I got there eventually.", "expected": "chitchat", "source": "edge", "boundary_pair": "complaint|chitchat", "notes": "mild negative → chitchat, no escalation signal"}
+{"id": "chitchat_edge_002", "text": "Not the fastest delivery but it got here.", "expected": "chitchat", "source": "edge", "boundary_pair": "complaint|chitchat", "notes": "mild negative → chitchat"}
+{"id": "complaint_001", "text": "I am extremely frustrated. This is the third time my order arrived damaged.", "expected": "complaint", "source": "seed", "boundary_pair": null, "notes": "emotional + repeated issue"}
+{"id": "complaint_002", "text": "Your customer service is terrible.", "expected": "complaint", "source": "seed", "boundary_pair": null, "notes": "negative sentiment"}
+{"id": "complaint_003", "text": "This is unacceptable. I want compensation.", "expected": "complaint", "source": "seed", "boundary_pair": null, "notes": "escalation trigger"}
+{"id": "complaint_004", "text": "I want to speak to a human agent.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": "explicit escalation/handoff request"}
+{"id": "complaint_005", "text": "I've been waiting 3 weeks and nobody has helped me. This is a disaster.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_006", "text": "Your website is absolute garbage. I've been trying to complete this purchase for an hour.", "expected": "complaint", "source": "edge", "boundary_pair": "complaint|chitchat", "notes": "strong frustration → complaint not chitchat"}
+{"id": "complaint_007", "text": "I'm absolutely furious with the service I've received.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_008", "text": "Nobody is responding to my emails and I've been waiting a week. This is a joke.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_009", "text": "I am so disappointed in this company.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_010", "text": "You have failed me as a customer and I intend to leave a public review.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_011", "text": "This is my second complaint and nothing has been resolved. I want a manager.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_012", "text": "I'm done with this company if you can't fix this.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_013", "text": "Please escalate this to someone who can actually help.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_014", "text": "I'm very unhappy with how this was handled.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_015", "text": "This keeps happening and I'm fed up.", "expected": "complaint", "source": "paraphrase", "boundary_pair": null, "notes": null}
+{"id": "complaint_edge_001", "text": "I'm absolutely furious. I want my $200 back right now.", "expected": "complaint", "source": "edge", "boundary_pair": "refund_request|complaint", "notes": "emotional + refund demand → complaint"}
+{"id": "complaint_edge_002", "text": "I've called three times and nobody helps me. Can you at least track my package?", "expected": "complaint", "source": "edge", "boundary_pair": "shipment_tracking|complaint", "notes": "escalation framing overrides tracking intent"}
+{"id": "complaint_edge_003", "text": "This is the third time I've been sent a broken item. I want a full refund and a manager.", "expected": "complaint", "source": "edge", "boundary_pair": "refund_request|complaint", "notes": "explicit escalation + repeated issue → complaint"}
+{"id": "complaint_edge_004", "text": "I want to cancel and I'm furious that I can't find the cancel button on your website.", "expected": "complaint", "source": "edge", "boundary_pair": "order_cancel|complaint", "notes": "frustration dominant → complaint"}
+{"id": "complaint_edge_005", "text": "This is unacceptable — my third damaged item in a row.", "expected": "complaint", "source": "edge", "boundary_pair": "refund_request|complaint", "notes": "no explicit refund request, strong complaint signal"}
+{"id": "unknown_001", "text": "asdfghjkl", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "gibberish"}
+{"id": "unknown_002", "text": "42", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "number only — no intent"}
+{"id": "unknown_003", "text": "Can you help me build a website?", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "completely unrelated to ecommerce"}
+{"id": "unknown_004", "text": "What is the capital of France?", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "general knowledge question"}
+{"id": "unknown_005", "text": "Write me a Python script to sort a list.", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "coding request"}
+{"id": "unknown_006", "text": "Can you explain quantum physics to me?", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "off-domain"}
+{"id": "unknown_007", "text": "What's 2+2?", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "math — no ecommerce context"}
+{"id": "unknown_008", "text": "Tell me a bedtime story.", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "no ecommerce relevance"}
+{"id": "unknown_009", "text": "???", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "punctuation only"}
+{"id": "unknown_010", "text": "I'm bored", "expected": "unknown", "source": "paraphrase", "boundary_pair": null, "notes": "no intent mappable to any class"}
+{"id": "unknown_edge_001", "text": "track", "expected": "shipment_tracking", "source": "edge", "boundary_pair": "unknown|shipment_tracking", "notes": "single word — valid intent, should NOT be unknown"}
+{"id": "unknown_edge_002", "text": "cancel", "expected": "order_cancel", "source": "edge", "boundary_pair": "unknown|order_cancel", "notes": "single word — valid intent, should NOT be unknown"}
