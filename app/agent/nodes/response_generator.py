@@ -95,7 +95,17 @@ def _build_messages(state: AgentState) -> list:
         system_message = SystemMessage(content=system_message.content + grounding)
 
     all_messages = list(state["messages"])
-    recent_messages = all_messages[-10:] if len(all_messages) > 10 else all_messages
+    summarized_through: int = state.get("summarized_message_count", 0)
+
+    if state.get("context_summary") and summarized_through > 0:
+        # Pass only the unsummarized window — everything from the cursor onward.
+        # Right after a summarization this is 1 message; between summarizations
+        # it grows up to ~SUMMARIZE_AFTER_N messages before the next firing.
+        recent_messages = all_messages[summarized_through:]
+    else:
+        # No summary yet — session is within its first batch, use all messages.
+        recent_messages = all_messages
+
     return [system_message] + recent_messages
 
 

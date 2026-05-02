@@ -14,16 +14,18 @@ logger = structlog.get_logger(__name__)
 
 
 def _build_messages(state: AgentState) -> list[BaseMessage]:
-    """Prepend the system prompt to the current conversation history.
+    """Prepend the system prompt to the unsummarized conversation window.
 
     The system prompt is rebuilt on every invocation so that context_summary
     and customer_history (loaded from Redis/Postgres) are always fresh.
+    Only messages from the summary cursor onward are included — the prior
+    history is already captured in context_summary inside the system prompt.
 
     Args:
         state: Current AgentState.
 
     Returns:
-        List starting with SystemMessage followed by all conversation messages.
+        List starting with SystemMessage followed by the unsummarized messages.
     """
     system_msg: SystemMessage = build_system_prompt(
         user_id=state["user_id"],
@@ -31,7 +33,15 @@ def _build_messages(state: AgentState) -> list[BaseMessage]:
         context_summary=state.get("context_summary"),
         customer_history=state.get("customer_history"),
     )
-    return [system_msg, *state["messages"]]
+    all_messages = list(state["messages"])
+    summarized_through: int = state.get("summarized_message_count", 0)
+
+    if state.get("context_summary") and summarized_through > 0:
+        recent_messages = all_messages[summarized_through:]
+    else:
+        recent_messages = all_messages
+
+    return [system_msg, *recent_messages]
 
 
 def _validate_tool_args(

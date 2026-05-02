@@ -120,6 +120,8 @@ class AgentState(TypedDict):
 
     context_summary: str | None
 
+    summarized_message_count: int
+
     customer_history: dict | None
     
     
@@ -157,5 +159,6 @@ def create_initial_state(
         output_retry_count=0,
         # Memory
         context_summary=None,
+        summarized_message_count=0,
         customer_history=None,
     )
