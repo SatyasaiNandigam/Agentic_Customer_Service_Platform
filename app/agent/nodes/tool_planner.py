@@ -8,37 +8,24 @@ from pydantic import ValidationError
 
 from app.agent.prompts import build_system_prompt
 from app.agent.state import AgentState
-from app.config import get_settings
 from app.mcp_client.tool_registry import get_registry_tools
 
 logger = structlog.get_logger(__name__)
 
 
-_llm : ChatOpenAI | None = None
-
-def _get_llm() -> ChatOpenAI:
-    """Return the shared ChatOpenAI client, creating it on first call."""
-    global _llm
-    if _llm is None:
-        settings = get_settings()
-        _llm = ChatOpenAI(
-            model=settings.classifier_model,
-            temperature=0,            # deterministic tool selection
-            max_tokens=settings.openai_max_tokens,
-        )
-    return _llm 
-
 def _build_messages(state: AgentState) -> list[BaseMessage]:
-    """Prepend the system prompt to the current conversation history.
+    """Prepend the system prompt to the unsummarized conversation window.
 
     The system prompt is rebuilt on every invocation so that context_summary
     and customer_history (loaded from Redis/Postgres) are always fresh.
+    Only messages from the summary cursor onward are included — the prior
+    history is already captured in context_summary inside the system prompt.
 
     Args:
         state: Current AgentState.
 
     Returns:
-        List starting with SystemMessage followed by all conversation messages.
+        List starting with SystemMessage followed by the unsummarized messages.
     """
     system_msg: SystemMessage = build_system_prompt(
         user_id=state["user_id"],
@@ -46,7 +33,15 @@ def _build_messages(state: AgentState) -> list[BaseMessage]:
         context_summary=state.get("context_summary"),
         customer_history=state.get("customer_history"),
     )
-    return [system_msg, *state["messages"]]
+    all_messages = list(state["messages"])
+    summarized_through: int = state.get("summarized_message_count", 0)
+
+    if state.get("context_summary") and summarized_through > 0:
+        recent_messages = all_messages[summarized_through:]
+    else:
+        recent_messages = all_messages
+
+    return [system_msg, *recent_messages]
 
 
 def _validate_tool_args(
@@ -99,178 +94,157 @@ def _validate_tool_args(
         return args, error_str
 
 
+def make_tool_planner_node(llm: ChatOpenAI):
+    """Return a tool_planner node coroutine that uses the provided LLM."""
 
-async def tool_planner_node(state: AgentState) -> dict:
-    """Select a tool and populate its arguments based on the conversation context.
+    async def tool_planner_node(state: AgentState) -> dict:
+        """Select a tool and populate its arguments based on the conversation context.
 
-    Node contract:
-        Input:  AgentState (full) — reads messages, user_id, user_role,
-                intent, tool_error (when retrying), retry_count.
-        Output: Partial AgentState dict — updates selected_tool, tool_input,
-                retry_count, tool_error, requires_tool, and messages.
+        Node contract:
+            Input:  AgentState (full) — reads messages, user_id, user_role,
+                    intent, tool_error (when retrying), tool_retry_count.
+            Output: Partial AgentState dict — updates selected_tool, tool_input,
+                    tool_retry_count, tool_error, requires_tool, and messages.
 
-    The node never raises — all exceptions are caught and converted to a
-    ``tool_error`` state update so ``route_after_tool_executor`` can handle
-    the retry/fallback logic without crashing the graph.
+        The node never raises — all exceptions are caught and converted to a
+        ``tool_error`` state update so ``route_after_tool_executor`` can handle
+        the retry/fallback logic without crashing the graph.
 
-    Args:
-        state: Current AgentState.
+        Args:
+            state: Current AgentState.
 
-    Returns:
-        Partial state dict with tool planning results.
-    """
-    user_id: int = state["user_id"]
-    user_role: str = state["user_role"]
-    intent: str = state.get("intent", "unknown")
-    is_retry: bool = state.get("tool_error") is not None
-    retry_count: int = state.get("retry_count", 0)
+        Returns:
+            Partial state dict with tool planning results.
+        """
+        user_id: int = state["user_id"]
+        user_role: str = state["user_role"]
+        intent: str = state.get("intent", "unknown")
+        is_retry: bool = state.get("tool_error") is not None
+        tool_retry_count: int = state.get("tool_retry_count", 0)
 
-    log = logger.bind(
-        user_id=user_id,
-        session_id=state.get("session_id"),
-        intent=intent,
-        is_retry=is_retry,
-        retry_count=retry_count,
-    )
-
-    log.info("tool_planner.started")
-
-    # ------------------------------------------------------------------
-    # 1. Fetch tool schemas from the in-process registry
-    # ------------------------------------------------------------------
-    # get_registry_tools() serves from memory on cache-hit (normal path)
-    # and connects to MCP server on cache-miss (first request for this role).
-    try:
-        tools: list[BaseTool] = await get_registry_tools(
+        log = logger.bind(
             user_id=user_id,
-            user_role=user_role,
+            session_id=state.get("session_id"),
+            intent=intent,
+            is_retry=is_retry,
+            tool_retry_count=tool_retry_count,
         )
-    except Exception as exc:
-        log.error("tool_planner.registry_error", error=str(exc))
-        return {
-            "tool_error": f"Tool registry unavailable: {exc}",
-            "selected_tool": None,
-            "tool_input": None,
-            "retry_count": retry_count + (1 if is_retry else 0),
-        }
 
-    log.debug("tool_planner.tools_loaded", tool_count=len(tools))
+        log.info("tool_planner.started")
 
-    # ------------------------------------------------------------------
-    # 2. Build the LLM with bound tools
-    # ------------------------------------------------------------------
-    # bind_tools() registers the tool schemas so Claude knows the exact
-    # shape of each tool's arguments. tool_choice="auto" lets it decide
-    # whether to call a tool at all (handles edge cases where the needed
-    # data is already in the conversation).
-    llm = _get_llm()
-    llm_with_tools = llm.bind_tools(tools, tool_choice="auto")
+        # ------------------------------------------------------------------
+        # 1. Fetch tool schemas from the in-process registry
+        # ------------------------------------------------------------------
+        try:
+            tools: list[BaseTool] = await get_registry_tools(
+                user_id=user_id,
+                user_role=user_role,
+            )
+        except Exception as exc:
+            log.error("tool_planner.registry_error", error=str(exc))
+            return {
+                "tool_error": f"Tool registry unavailable: {exc}",
+                "selected_tool": None,
+                "tool_input": None,
+                "tool_retry_count": tool_retry_count + (1 if is_retry else 0),
+            }
 
-    # ------------------------------------------------------------------
-    # 3. Build message list (system prompt + conversation history)
-    # ------------------------------------------------------------------
-    # On retry, the previous AIMessage (bad tool_use) + ToolMessage (error)
-    # are already in state["messages"] — tool_executor appended them.
-    # The LLM sees the full failure context without any extra injection.
-    messages = _build_messages(state)
+        log.debug("tool_planner.tools_loaded", tool_count=len(tools))
 
-    # ------------------------------------------------------------------
-    # 4. Invoke the LLM
-    # ------------------------------------------------------------------
-    try:
-        ai_msg: AIMessage = await llm_with_tools.ainvoke(messages)
-    except Exception as exc:
-        log.error(
-            "tool_planner.llm_error",
-            error=str(exc),
-            error_type=type(exc).__name__,
-        )
-        return {
-            "tool_error": f"LLM call failed during tool planning: {exc}",
-            "selected_tool": None,
-            "tool_input": None,
-            "retry_count": retry_count + (1 if is_retry else 0),
-        }
+        # ------------------------------------------------------------------
+        # 2. Build the LLM with bound tools
+        # ------------------------------------------------------------------
+        llm_with_tools = llm.bind_tools(tools, tool_choice="auto")
 
-    # ------------------------------------------------------------------
-    # 5. Parse the response
-    # ------------------------------------------------------------------
-    # LangChain already converts Anthropic's raw tool_use JSON into a list
-    # of ToolCall dicts: [{"name": str, "args": dict, "id": str}]
-    # No manual parsing or regex needed.
+        # ------------------------------------------------------------------
+        # 3. Build message list (system prompt + conversation history)
+        # ------------------------------------------------------------------
+        messages = _build_messages(state)
 
-    if not ai_msg.tool_calls:
-        # The LLM decided no tool call is needed (information already in
-        # conversation, or it wants to ask a clarifying question).
-        # Let response_generator use the AI message directly.
+        # ------------------------------------------------------------------
+        # 4. Invoke the LLM
+        # ------------------------------------------------------------------
+        try:
+            ai_msg: AIMessage = await llm_with_tools.ainvoke(messages)
+        except Exception as exc:
+            log.error(
+                "tool_planner.llm_error",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+            return {
+                "tool_error": f"LLM call failed during tool planning: {exc}",
+                "selected_tool": None,
+                "tool_input": None,
+                "tool_retry_count": tool_retry_count + (1 if is_retry else 0),
+            }
+
+        # ------------------------------------------------------------------
+        # 5. Parse the response
+        # ------------------------------------------------------------------
+        if not ai_msg.tool_calls:
+            log.info(
+                "tool_planner.no_tool_selected",
+                content_preview=str(ai_msg.content)[:120],
+            )
+            return {
+                "requires_tool": False,
+                "selected_tool": None,
+                "tool_input": None,
+                "tool_error": None,
+                "tool_retry_count": tool_retry_count + (1 if is_retry else 0),
+                "messages": [ai_msg],
+            }
+
+        tool_call = ai_msg.tool_calls[0]
+        selected_tool: str = tool_call["name"]
+        raw_args: dict = tool_call["args"]
+
         log.info(
-            "tool_planner.no_tool_selected",
-            content_preview=str(ai_msg.content)[:120],
+            "tool_planner.tool_selected",
+            tool_name=selected_tool,
+            raw_args=raw_args,
         )
+
+        # ------------------------------------------------------------------
+        # 6. Validate args against the tool's Pydantic schema
+        # ------------------------------------------------------------------
+        tool_input, validation_error = _validate_tool_args(
+            tool_name=selected_tool,
+            args=raw_args,
+            available_tools=tools,
+        )
+
+        if validation_error:
+            log.warning(
+                "tool_planner.args_validation_failed",
+                tool_name=selected_tool,
+                validation_error=validation_error,
+            )
+            return {
+                "tool_error": validation_error,
+                "selected_tool": None,
+                "tool_input": None,
+                "tool_retry_count": tool_retry_count + 1,
+                "messages": [ai_msg],
+            }
+
+        log.info(
+            "tool_planner.plan_ready",
+            tool_name=selected_tool,
+            validated_args=tool_input,
+            tool_retry_count=tool_retry_count,
+        )
+
+        # ------------------------------------------------------------------
+        # 7. Return the plan
+        # ------------------------------------------------------------------
         return {
-            "requires_tool": False,
-            "selected_tool": None,
-            "tool_input": None,
+            "selected_tool": selected_tool,
+            "tool_input": tool_input,
             "tool_error": None,
-            "retry_count": retry_count,
+            "tool_retry_count": tool_retry_count + (1 if is_retry else 0),
             "messages": [ai_msg],
         }
 
-    # Take the first tool call — Claude rarely returns more than one for
-    # customer-service queries, and our tool_executor handles one call per turn.
-    tool_call = ai_msg.tool_calls[0]
-    selected_tool: str = tool_call["name"]
-    raw_args: dict = tool_call["args"]
-
-    log.info(
-        "tool_planner.tool_selected",
-        tool_name=selected_tool,
-        raw_args=raw_args,
-    )
-
-    # ------------------------------------------------------------------
-    # 6. Validate args against the tool's Pydantic schema
-    # ------------------------------------------------------------------
-    # This is the structured-output validation step: each BaseTool carries
-    # an args_schema (Pydantic model) generated from its JSON schema.
-    # Validating here — before hitting the MCP server — converts a runtime
-    # 422 from the tool server into a clean retry with a useful error message.
-    tool_input, validation_error = _validate_tool_args(
-        tool_name=selected_tool,
-        args=raw_args,
-        available_tools=tools,
-    )
-
-    if validation_error:
-        log.warning(
-            "tool_planner.args_validation_failed",
-            tool_name=selected_tool,
-            validation_error=validation_error,
-        )
-        # Treat invalid args as a planning error → retry edge will re-invoke
-        # this node with the error surfaced in state so the LLM can correct.
-        return {
-            "tool_error": validation_error,
-            "selected_tool": None,
-            "tool_input": None,
-            "retry_count": retry_count + 1,
-            "messages": [ai_msg],  # keep the planning message for LLM context
-        }
-
-    log.info(
-        "tool_planner.plan_ready",
-        tool_name=selected_tool,
-        validated_args=tool_input,
-        retry_count=retry_count,
-    )
-
-    # ------------------------------------------------------------------
-    # 7. Return the plan
-    # ------------------------------------------------------------------
-    return {
-        "selected_tool": selected_tool,
-        "tool_input": tool_input,
-        "tool_error": None,                          # clear any previous error
-        "retry_count": retry_count + (1 if is_retry else 0),
-        "messages": [ai_msg],                        # append planning message to history
-    }
+    return tool_planner_node

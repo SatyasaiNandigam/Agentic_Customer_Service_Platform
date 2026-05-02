@@ -70,8 +70,9 @@ from app.auth.middleware import CurrentUser, get_current_user_ws
 from app.auth.service import TokenData
 from app.config import get_settings
 from app.db.session import get_db, get_db_context
+from app.dependencies import AgentGraph, RateLimitedUser
+from app.guardrails.rate_limiter import peek_message_rate_limit
 from app.memory.long_term import load_customer_history
-from app.memory.short_term import get_user_sessions, save_session_context
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -233,8 +234,121 @@ _TURN_RESET: dict = {
     "input_safe": True,
     "output_safe": True,
     "guardrail_violation": None,
-    "retry_count": 0,
+    "tool_retry_count": 0,
+    "output_retry_count": 0,
 }
+
+
+def _build_turn_input(
+    *,
+    user_id: str | int,
+    session_id: str,
+    user_role,
+    user_message: str,
+    customer_history: dict | None,
+    run_id: uuid.UUID,
+    tags: list[str],
+) -> tuple[dict, RunnableConfig]:
+    """Build the graph input dict and RunnableConfig for one agent turn.
+
+    Centralises the three repeated constructions that existed across the sync,
+    SSE, and WebSocket endpoints.  Adding or renaming a state field now requires
+    a change in exactly one place.
+    """
+    graph_input = {
+        "messages": [HumanMessage(content=user_message)],
+        "user_id": str(user_id),
+        "session_id": session_id,
+        "user_role": user_role,
+        "customer_history": customer_history,
+        **_TURN_RESET,
+    }
+    config = RunnableConfig(
+        run_id=run_id,
+        tags=tags,
+        metadata={"customer_id": str(user_id), "session_id": session_id},
+        configurable={"thread_id": session_id},
+    )
+    return graph_input, config
+
+
+def _assemble_response_text(streamed_tokens: list[str], final_state: dict) -> str:
+    """Assemble the final AI response from streamed tokens or completed graph state."""
+    if streamed_tokens:
+        return "".join(streamed_tokens).strip()
+    if final_state:
+        return _extract_ai_response(final_state)
+    return "I'm sorry, I couldn't generate a response. Please try again."
+
+
+async def _process_graph_turn(
+    agent_graph,
+    graph_input: dict,
+    config: RunnableConfig,
+    session_id: str,
+    run_id: uuid.UUID,
+    log,
+) -> AsyncGenerator[dict, None]:
+    """Shared async generator for one agent turn — protocol-agnostic.
+
+    Streams events from ``astream_events``, yielding plain dicts that callers
+    convert to SSE lines or WebSocket frames.  Handles error recovery internally
+    so callers only need to forward the yielded dicts and handle
+    ``WebSocketDisconnect`` from their own send calls.
+
+    Yields:
+        ``{"type": "token",      "content": "..."}``
+        ``{"type": "tool_start", "tool": "..."}``
+        ``{"type": "tool_end",   "tool": "..."}``
+        ``{"type": "error",      "detail": "..."}``   — generator stops after this
+        ``{"type": "done",       "message": "...", "session_id": "...",
+           "intent": "...", "run_id": "..."}``         — always the last event
+    """
+    streamed_tokens: list[str] = []
+    final_intent: str = "unknown"
+    final_state: dict = {}
+
+    try:
+        async for event in agent_graph.astream_events(graph_input, config=config, version="v2"):
+            event_type: str = event.get("event", "")
+            event_name: str = event.get("name", "")
+            node: str = event.get("metadata", {}).get("langgraph_node", "")
+
+            if event_type == "on_chat_model_stream" and node == NODE_RESPONSE_GENERATOR:
+                chunk = event.get("data", {}).get("chunk")
+                if chunk is not None:
+                    token_text = _extract_chunk_text(chunk)
+                    if token_text:
+                        streamed_tokens.append(token_text)
+                        yield {"type": "token", "content": token_text}
+
+            elif event_type == "on_chain_start" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
+                yield {"type": "tool_start", "tool": _get_tool_name_from_state(event)}
+
+            elif event_type == "on_chain_end" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
+                yield {"type": "tool_end", "tool": _get_tool_name_from_state(event)}
+
+            elif event_type == "on_chain_end" and event_name == "LangGraph":
+                output = event.get("data", {}).get("output", {})
+                if isinstance(output, dict):
+                    final_state = output
+                    final_intent = output.get("intent", "unknown")
+
+    except Exception as exc:
+        log.error("graph.stream_error", error=str(exc))
+        yield {"type": "error", "detail": "An error occurred. Please try again."}
+        return
+
+    ai_response = _assemble_response_text(streamed_tokens, final_state)
+
+    yield {
+        "type": "done",
+        "message": ai_response,
+        "session_id": session_id,
+        "intent": final_intent,
+        "run_id": str(run_id),
+    }
+    log.info("graph.turn_complete", intent=final_intent, response_length=len(ai_response))
 
 
 # ---------------------------------------------------------------------------
@@ -254,9 +368,9 @@ _TURN_RESET: dict = {
 )
 async def post_chat(
     body: ChatRequest,
-    request: Request,
-    user: CurrentUser,
+    user: RateLimitedUser,
     db: Annotated[AsyncSession, Depends(get_db)],
+    agent_graph: AgentGraph,
 ) -> ChatResponse:
     """Handle one synchronous chat turn.
 
@@ -283,28 +397,17 @@ async def post_chat(
     customer_history = await _load_customer_history(db, user.user_id, session_id)
 
     # -- Build turn input (checkpointer auto-loads prior messages + context_summary) --
-    graph_input = {
-        "messages": [HumanMessage(content=body.message)],
-        "user_id": str(user.user_id),
-        "session_id": session_id,
-        "user_role": user.role,
-        "max_turns": settings.agent_max_turns,
-        "customer_history": customer_history,
-        **_TURN_RESET,
-    }
-
-    config = RunnableConfig(
+    graph_input, config = _build_turn_input(
+        user_id=user.user_id,
+        session_id=session_id,
+        user_role=user.role,
+        user_message=body.message,
+        customer_history=customer_history,
         run_id=run_id,
         tags=["production", "http"],
-        metadata={
-            "customer_id": str(user.user_id),
-            "session_id": session_id,
-        },
-        configurable={"thread_id": session_id},
     )
 
     # -- Invoke agent --
-    agent_graph = request.app.state.graph
     try:
         result = await agent_graph.ainvoke(graph_input, config=config)
     except Exception as exc:
@@ -317,13 +420,6 @@ async def post_chat(
     # -- Extract response fields --
     ai_response = _extract_ai_response(result)
     intent: str = result.get("intent", "unknown")
-
-    # -- Update Redis user-sessions sorted set (powers GET /chat/sessions) --
-    await save_session_context(
-        session_id,
-        user_id=user.user_id,
-        intent=intent,
-    )
 
     log.info("chat.response_sent", intent=intent, response_length=len(ai_response))
 
@@ -342,7 +438,7 @@ async def post_chat(
 
 async def _stream_agent_response(
     agent_graph,
-    user_id: str,
+    user_id: str | int,
     user_role,
     session_id: str,
     user_message: str,
@@ -354,73 +450,20 @@ async def _stream_agent_response(
     async with get_db_context() as db:
         customer_history = await _load_customer_history(db, user_id, session_id)
 
-    graph_input = {
-        "messages": [HumanMessage(content=user_message)],
-        "user_id": str(user_id),
-        "session_id": session_id,
-        "user_role": user_role,
-        "max_turns": settings.agent_max_turns,
-        "customer_history": customer_history,
-        **_TURN_RESET,
-    }
-
-    config = RunnableConfig(
+    graph_input, config = _build_turn_input(
+        user_id=user_id,
+        session_id=session_id,
+        user_role=user_role,
+        user_message=user_message,
+        customer_history=customer_history,
         run_id=run_id,
         tags=["production", "sse"],
-        metadata={"customer_id": str(user_id), "session_id": session_id},
-        configurable={"thread_id": session_id},
     )
 
-    streamed_tokens: list[str] = []
-    final_intent: str = "unknown"
-    final_state: dict = {}
-
-    try:
-        async for event in agent_graph.astream_events(graph_input, config=config, version="v2"):
-            event_type: str = event.get("event", "")
-            event_name: str = event.get("name", "")
-            metadata: dict = event.get("metadata", {})
-            node: str = metadata.get("langgraph_node", "")
-
-            if event_type == "on_chat_model_stream" and node == NODE_RESPONSE_GENERATOR:
-                chunk = event.get("data", {}).get("chunk")
-                if chunk is not None:
-                    token_text = _extract_chunk_text(chunk)
-                    if token_text:
-                        streamed_tokens.append(token_text)
-                        yield f"data: {json.dumps({'type': 'token', 'content': token_text})}\n\n"
-
-            elif event_type == "on_chain_start" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
-                tool_name = _get_tool_name_from_state(event)
-                yield f"data: {json.dumps({'type': 'tool_start', 'tool': tool_name})}\n\n"
-
-            elif event_type == "on_chain_end" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
-                tool_name = _get_tool_name_from_state(event)
-                yield f"data: {json.dumps({'type': 'tool_end', 'tool': tool_name})}\n\n"
-
-            elif event_type == "on_chain_end" and event_name == "LangGraph":
-                output = event.get("data", {}).get("output", {})
-                if isinstance(output, dict):
-                    final_state = output
-                    final_intent = output.get("intent", "unknown")
-
-    except Exception as exc:
-        log.error("sse.graph_stream_error", error=str(exc))
-        yield f"data: {json.dumps({'type': 'error', 'detail': 'An error occurred. Please try again.'})}\n\n"
-        return
-
-    if streamed_tokens:
-        ai_response = "".join(streamed_tokens).strip()
-    elif final_state:
-        ai_response = _extract_ai_response(final_state)
-    else:
-        ai_response = "I'm sorry, I couldn't generate a response. Please try again."
-
-    await save_session_context(session_id, user_id=user_id, intent=final_intent)
-
-    yield f"data: {json.dumps({'type': 'done', 'message': ai_response, 'session_id': session_id, 'intent': final_intent, 'run_id': str(run_id)})}\n\n"
-
-    log.info("sse.turn_complete", intent=final_intent, response_length=len(ai_response))
+    async for event_dict in _process_graph_turn(
+        agent_graph, graph_input, config, session_id, run_id, log
+    ):
+        yield f"data: {json.dumps(event_dict)}\n\n"
 
 
 @router.post(
@@ -457,8 +500,8 @@ async def _stream_agent_response(
 )
 async def post_chat_stream(
     body: ChatRequest,
-    request: Request,
-    user: CurrentUser,
+    user: RateLimitedUser,
+    agent_graph: AgentGraph,
 ) -> StreamingResponse:
     """Stream a single chat turn as Server-Sent Events."""
     session_id = _resolve_session_id(body.session_id, user.session_id)
@@ -470,7 +513,7 @@ async def post_chat_stream(
 
     return StreamingResponse(
         _stream_agent_response(
-            agent_graph=request.app.state.graph,
+            agent_graph=agent_graph,
             user_id=user.user_id,
             user_role=user.role,
             session_id=session_id,
@@ -540,12 +583,59 @@ async def get_chat_history(
     ),
 )
 async def get_chat_sessions(
+    request: Request,
     user: CurrentUser,
     limit: Annotated[int, Query(ge=1, le=50, description="Max sessions to return.")] = 20,
 ) -> SessionListResponse:
-    sessions_data = await get_user_sessions(user.user_id, limit=limit)
-    items = [SessionItem(**s) for s in sessions_data]
-    logger.bind(user_id=user.user_id).info("chat.sessions_listed", count=len(items))
+    """List sessions by querying the LangGraph checkpointer directly.
+
+    Uses ``alist`` (filtered by ``customer_id`` metadata) to discover distinct
+    thread IDs, then ``aget_state`` to read the current state of each thread.
+    Ordering is newest-first as returned by the checkpointer.
+    """
+    graph = request.app.state.graph
+    log = logger.bind(user_id=user.user_id)
+
+    # Step 1: Collect distinct thread_ids for this user, newest-first.
+    # alist returns checkpoints across all threads in reverse-chronological order;
+    # the first occurrence of each thread_id is its latest checkpoint.
+    seen_threads: list[str] = []
+    try:
+        async for tup in graph.checkpointer.alist(
+            config=None,
+            filter={"customer_id": str(user.user_id)},
+        ):
+            thread_id: str = tup.config["configurable"]["thread_id"]
+            if thread_id not in seen_threads:
+                seen_threads.append(thread_id)
+            if len(seen_threads) >= limit:
+                break
+    except Exception as exc:
+        log.warning("chat.sessions_list_error", error=str(exc))
+
+    # Step 2: Fetch the current (latest) state for each thread.
+    items: list[SessionItem] = []
+    for thread_id in seen_threads:
+        try:
+            snapshot = await graph.aget_state({"configurable": {"thread_id": thread_id}})
+        except Exception as exc:
+            log.warning("chat.session_state_error", thread_id=thread_id, error=str(exc))
+            continue
+        if not snapshot:
+            continue
+
+        values = snapshot.values
+        messages = values.get("messages", [])
+        human_count = sum(1 for m in messages if getattr(m, "type", None) == "human")
+
+        items.append(SessionItem(
+            session_id=thread_id,
+            updated_at=snapshot.created_at,
+            last_intent=values.get("intent") or "unknown",
+            message_count=human_count,
+        ))
+
+    log.info("chat.sessions_listed", count=len(items))
     return SessionListResponse(sessions=items, count=len(items))
 
 
@@ -623,122 +713,58 @@ async def websocket_chat(
             log = log.bind(run_id=str(run_id))
             log.info("ws.turn_started", message_length=len(user_message))
 
+            # ---- Rate limit check (per-turn) ----
+            count = await peek_message_rate_limit(user.user_id)
+            if count >= settings.rate_limit_messages_per_minute:
+                log.warning(
+                    "ws.rate_limit_exceeded",
+                    count=count,
+                    limit=settings.rate_limit_messages_per_minute,
+                )
+                await websocket.send_json({
+                    "type": "error",
+                    "detail": (
+                        f"Rate limit exceeded: {count}/{settings.rate_limit_messages_per_minute} "
+                        "messages in the last 60 seconds. Please wait before sending another message."
+                    ),
+                    "retry_after": 60,
+                })
+                continue
+
             # ---- Load customer context (new DB session per turn) ----
             async with get_db_context() as db:
                 customer_history = await _load_customer_history(
                     db, user.user_id, session_id
                 )
 
-            # ---- Build turn input (checkpointer loads prior messages automatically) ----
-            graph_input = {
-                "messages": [HumanMessage(content=user_message)],
-                "user_id": str(user.user_id),
-                "session_id": session_id,
-                "user_role": user.role,
-                "max_turns": settings.agent_max_turns,
-                "customer_history": customer_history,
-                **_TURN_RESET,
-            }
-
-            config = RunnableConfig(
+            # ---- Build turn input ----
+            graph_input, config = _build_turn_input(
+                user_id=user.user_id,
+                session_id=session_id,
+                user_role=user.role,
+                user_message=user_message,
+                customer_history=customer_history,
                 run_id=run_id,
                 tags=["production", "websocket"],
-                metadata={
-                    "customer_id": str(user.user_id),
-                    "session_id": session_id,
-                },
-                configurable={"thread_id": session_id},
             )
 
             # ---- Stream events ----
             agent_graph = websocket.app.state.graph
-            streamed_tokens: list[str] = []
-            final_intent: str = "unknown"
-            final_state: dict = {}
 
             try:
-                async for event in agent_graph.astream_events(graph_input, config=config, version="v2"):
-                    event_type: str = event.get("event", "")
-                    event_name: str = event.get("name", "")
-                    metadata: dict = event.get("metadata", {})
-                    node: str = metadata.get("langgraph_node", "")
-
-                    # -- Streaming tokens from the response generator --
-                    if (
-                        event_type == "on_chat_model_stream"
-                        and node == NODE_RESPONSE_GENERATOR
-                    ):
-                        chunk = event.get("data", {}).get("chunk")
-                        if chunk is not None:
-                            token_text = _extract_chunk_text(chunk)
-                            if token_text:
-                                streamed_tokens.append(token_text)
-                                await websocket.send_json(
-                                    {"type": "token", "content": token_text}
-                                )
-
-                    # -- Tool execution lifecycle events --
-                    elif event_type == "on_chain_start" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
-                        tool_name = _get_tool_name_from_state(event)
-                        await websocket.send_json(
-                            {"type": "tool_start", "tool": tool_name}
-                        )
-
-                    elif event_type == "on_chain_end" and node == NODE_TOOL_EXECUTOR and event_name == NODE_TOOL_EXECUTOR:
-                        tool_name = _get_tool_name_from_state(event)
-                        await websocket.send_json(
-                            {"type": "tool_end", "tool": tool_name}
-                        )
-
-                    # -- Capture final graph output --
-                    elif event_type == "on_chain_end" and event_name == "LangGraph":
-                        output = event.get("data", {}).get("output", {})
-                        if isinstance(output, dict):
-                            final_state = output
-                            final_intent = output.get("intent", "unknown")
-
+                async for event_dict in _process_graph_turn(
+                    agent_graph, graph_input, config, session_id, run_id, log
+                ):
+                    await websocket.send_json(event_dict)
             except WebSocketDisconnect:
                 log.info("ws.client_disconnected_during_stream")
                 break
             except Exception as exc:
-                log.error("ws.graph_stream_error", error=str(exc))
+                log.error("ws.send_error", error=str(exc))
                 await websocket.send_json(
                     {"type": "error", "detail": "An error occurred. Please try again."}
                 )
                 continue
-
-            # ---- Assemble final response ----
-            if streamed_tokens:
-                # Happy path: tokens were streamed — join them
-                ai_response = "".join(streamed_tokens).strip()
-            elif final_state:
-                # Non-streaming path: guardrail block, direct route, etc.
-                ai_response = _extract_ai_response(final_state)
-            else:
-                ai_response = "I'm sorry, I couldn't generate a response. Please try again."
-
-            # ---- Update Redis user-sessions sorted set (powers GET /chat/sessions) ----
-            await save_session_context(
-                session_id,
-                user_id=user.user_id,
-                intent=final_intent,
-            )
-
-            # ---- Signal turn complete ----
-            await websocket.send_json({
-                "type": "done",
-                "message": ai_response,
-                "session_id": session_id,
-                "intent": final_intent,
-                "run_id": str(run_id),
-            })
-
-            log.info(
-                "ws.turn_complete",
-                intent=final_intent,
-                response_length=len(ai_response),
-                streamed=bool(streamed_tokens),
-            )
 
     except WebSocketDisconnect:
         log.info("ws.disconnected")
