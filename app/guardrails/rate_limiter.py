@@ -206,6 +206,21 @@ async def check_message_rate_limit(user_id: int) -> tuple[bool, int]:
     return await _get_message_limiter().check(user_id)
 
 
+async def peek_message_rate_limit(user_id: int) -> int:
+    """Return the current message count for *user_id* without recording a new event.
+
+    Used at the API layer for an early 429 before the graph is invoked — keeps
+    the authoritative recording in the guardrail's ``check_message_rate_limit``.
+
+    Args:
+        user_id: The authenticated user's ID (from JWT, never from LLM args).
+
+    Returns:
+        Active message count within the current 60-second window, or 0 on Redis errors.
+    """
+    return await _get_message_limiter().peek(user_id)
+
+
 async def check_write_rate_limit(user_id: int) -> tuple[bool, int]:
     """Check the per-user **write-op** rate limit (3 ops / 300 s by default).
 

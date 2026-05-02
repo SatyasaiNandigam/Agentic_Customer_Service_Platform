@@ -70,6 +70,8 @@ from app.auth.middleware import CurrentUser, get_current_user_ws
 from app.auth.service import TokenData
 from app.config import get_settings
 from app.db.session import get_db, get_db_context
+from app.dependencies import AgentGraph, RateLimitedUser
+from app.guardrails.rate_limiter import peek_message_rate_limit
 from app.memory.long_term import load_customer_history
 
 logger = structlog.get_logger(__name__)
@@ -366,9 +368,9 @@ async def _process_graph_turn(
 )
 async def post_chat(
     body: ChatRequest,
-    request: Request,
-    user: CurrentUser,
+    user: RateLimitedUser,
     db: Annotated[AsyncSession, Depends(get_db)],
+    agent_graph: AgentGraph,
 ) -> ChatResponse:
     """Handle one synchronous chat turn.
 
@@ -406,7 +408,6 @@ async def post_chat(
     )
 
     # -- Invoke agent --
-    agent_graph = request.app.state.graph
     try:
         result = await agent_graph.ainvoke(graph_input, config=config)
     except Exception as exc:
@@ -499,8 +500,8 @@ async def _stream_agent_response(
 )
 async def post_chat_stream(
     body: ChatRequest,
-    request: Request,
-    user: CurrentUser,
+    user: RateLimitedUser,
+    agent_graph: AgentGraph,
 ) -> StreamingResponse:
     """Stream a single chat turn as Server-Sent Events."""
     session_id = _resolve_session_id(body.session_id, user.session_id)
@@ -512,7 +513,7 @@ async def post_chat_stream(
 
     return StreamingResponse(
         _stream_agent_response(
-            agent_graph=request.app.state.graph,
+            agent_graph=agent_graph,
             user_id=user.user_id,
             user_role=user.role,
             session_id=session_id,
@@ -711,6 +712,24 @@ async def websocket_chat(
             run_id = uuid.uuid4()
             log = log.bind(run_id=str(run_id))
             log.info("ws.turn_started", message_length=len(user_message))
+
+            # ---- Rate limit check (per-turn) ----
+            count = await peek_message_rate_limit(user.user_id)
+            if count >= settings.rate_limit_messages_per_minute:
+                log.warning(
+                    "ws.rate_limit_exceeded",
+                    count=count,
+                    limit=settings.rate_limit_messages_per_minute,
+                )
+                await websocket.send_json({
+                    "type": "error",
+                    "detail": (
+                        f"Rate limit exceeded: {count}/{settings.rate_limit_messages_per_minute} "
+                        "messages in the last 60 seconds. Please wait before sending another message."
+                    ),
+                    "retry_after": 60,
+                })
+                continue
 
             # ---- Load customer context (new DB session per turn) ----
             async with get_db_context() as db:
