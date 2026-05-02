@@ -182,7 +182,7 @@ def make_tool_planner_node(llm: ChatOpenAI):
                 "selected_tool": None,
                 "tool_input": None,
                 "tool_error": None,
-                "tool_retry_count": tool_retry_count,
+                "tool_retry_count": tool_retry_count + (1 if is_retry else 0),
                 "messages": [ai_msg],
             }
 

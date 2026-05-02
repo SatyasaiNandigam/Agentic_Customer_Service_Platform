@@ -84,7 +84,7 @@ def make_customer_delegator_node(llm: ChatOpenAI):
             )
             return _FALLBACK_STATE
 
-        if confidence < CONFIDENCE_THRESHOLD:
+        if confidence <= CONFIDENCE_THRESHOLD:
             log.warning(
                 "customer_delegator.low_confidence",
                 domain=domain,

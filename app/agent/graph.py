@@ -20,6 +20,7 @@ from app.agent.edges import (
     route_after_guardrails_in,
     route_after_guardrails_out,
     route_after_tool_executor,
+    route_after_tool_planner,
 )
 from app.memory.summarizer import maybe_summarize
 
@@ -154,7 +155,14 @@ def build_graph(checkpointer=None):
         },
     )
 
-    workflow.add_edge(NODE_TOOL_PLANNER, NODE_TOOL_EXECUTOR)
+    workflow.add_conditional_edges(
+        NODE_TOOL_PLANNER,
+        route_after_tool_planner,
+        {
+            NODE_TOOL_EXECUTOR: NODE_TOOL_EXECUTOR,
+            NODE_MEMORY: NODE_MEMORY,
+        },
+    )
 
     workflow.add_conditional_edges(
         NODE_TOOL_EXECUTOR,

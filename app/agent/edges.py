@@ -136,6 +136,38 @@ def route_after_classifier(state: AgentState) -> str:
     return NODE_MEMORY
 
 
+def route_after_tool_planner(state: AgentState) -> str:
+    """Route to tool_executor when a tool was selected, otherwise skip to memory.
+
+    When the planner finds no applicable tool (selected_tool is None and no error),
+    the query cannot be answered with live data — route directly to memory/response_generator
+    rather than letting tool_executor treat the missing tool as a retriable error.
+
+    Args:
+        state: Current AgentState after tool_planner has run.
+
+    Returns:
+        ``NODE_TOOL_EXECUTOR`` when a tool is ready to run, ``NODE_MEMORY`` otherwise.
+    """
+    log = logger.bind(
+        user_id=state.get("user_id"),
+        session_id=state.get("session_id"),
+        intent=state.get("intent"),
+        selected_tool=state.get("selected_tool"),
+    )
+
+    if state.get("selected_tool") is not None:
+        log.debug("edge.tool_planner->tool_executor", selected_tool=state["selected_tool"])
+        return NODE_TOOL_EXECUTOR
+
+    log.info(
+        "edge.tool_planner->memory",
+        reason="no_tool_selected",
+        tool_error=state.get("tool_error"),
+    )
+    return NODE_MEMORY
+
+
 def route_after_tool_executor(state: AgentState) -> str:
     """Route to a retry, or to response_generator when the tool loop is done.
 

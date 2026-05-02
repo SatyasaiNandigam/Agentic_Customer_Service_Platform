@@ -152,7 +152,7 @@ def make_classifier_node(llm: ChatOpenAI):
 
         log.debug("classifier.raw", intent=intent, confidence=confidence, domain=domain)
 
-        if confidence < CONFIDENCE_THRESHOLD:
+        if confidence <= CONFIDENCE_THRESHOLD:
             intent = _DOMAIN_FALLBACK_INTENT.get(domain, "unknown")
 
         intent = _validate_intent_for_domain(intent, domain)
