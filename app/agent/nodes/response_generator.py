@@ -7,7 +7,6 @@ from langchain_core.messages import AIMessage, SystemMessage
 
 from app.agent.prompts import build_system_prompt
 from app.agent.state import AgentState
-from app.config import get_settings
 
 logger = structlog.get_logger(__name__)
 
@@ -20,19 +19,6 @@ _FALLBACK_TOOL_ERROR = (
     "I wasn't able to retrieve the information needed to answer your question right now. "
     "Please try again in a moment, or let me know if I can help with something else."
 )
-
-_llm : ChatOpenAI | None = None
-
-def _get_llm() -> ChatOpenAI:
-    global _llm
-    if _llm is None:
-        settings = get_settings()
-        _llm = ChatOpenAI(
-            model=settings.openai_model,
-            temperature=0.7,
-            max_tokens=settings.openai_max_tokens,
-        )
-    return _llm
 
 
 def _build_grounding_section(
@@ -93,20 +79,7 @@ def _build_grounding_section(
 
 
 def _build_messages(state: AgentState) -> list:
-    """Compose the full message list for the response-generation LLM call.
-
-    Builds a fresh system message per invocation (so that updated memory
-    context and grounding data are always current), then prepends it to the
-    existing conversation history from state.
-
-    Args:
-        state: Current AgentState. Must have ``user_id``, ``user_role``, and
-               ``messages`` populated.
-
-    Returns:
-        List of messages: ``[SystemMessage, *state["messages"]]``.
-    """
-    # Build base system prompt — injects role description, memory context, etc.
+    """Compose the full message list for the response-generation LLM call."""
     system_message = build_system_prompt(
         user_id=state["user_id"],
         user_role=state["user_role"],
@@ -114,7 +87,6 @@ def _build_messages(state: AgentState) -> list:
         customer_history=state.get("customer_history"),
     )
 
-    # Append grounding / error-handling block when relevant
     grounding = _build_grounding_section(
         tool_result=state.get("tool_result"),
         tool_error=state.get("tool_error"),
@@ -128,13 +100,7 @@ def _build_messages(state: AgentState) -> list:
 
 
 def _resolve_response_path(state: AgentState) -> str:
-    """Return a label describing which response path is active (for logging).
-
-    Returns:
-        ``"tool_error"``  — tool execution failed, graceful degradation path.
-        ``"tool_result"`` — tool succeeded, grounded synthesis path.
-        ``"direct"``      — no tool involved, conversational path.
-    """
+    """Return a label describing which response path is active (for logging)."""
     if state.get("tool_error"):
         return "tool_error"
     if state.get("tool_result") is not None:
@@ -142,97 +108,71 @@ def _resolve_response_path(state: AgentState) -> str:
     return "direct"
 
 
+def make_response_generator_node(llm: ChatOpenAI):
+    """Return a response_generator node coroutine that uses the provided LLM."""
 
+    async def response_generator_node(state: AgentState) -> dict:
+        """Generate the final customer-facing response and return a state update.
 
-async def response_generator_node(state: AgentState) -> dict:
-    """Generate the final customer-facing response and return a state update.
+        Called as the last reasoning step before ``guardrails_out``.  Builds a
+        system-prompt-augmented message list, invokes LLM, and returns
+        the resulting AIMessage as a partial state update.
 
-    Called as the last reasoning step before ``guardrails_out``.  Builds a
-    system-prompt-augmented message list, invokes LLM, and returns
-    the resulting AIMessage as a partial state update.
+        The node never raises — any exception produces a safe, customer-friendly
+        fallback message so the graph always terminates cleanly.
 
-    The node never raises — any exception produces a safe, customer-friendly
-    fallback message so the graph always terminates cleanly.
+        Args:
+            state: The current AgentState.
 
-    Args:
-        state: The current AgentState.  Key fields consumed:
+        Returns:
+            Partial AgentState dict with:
 
-            ``messages``
-                Full conversation history (HumanMessage / AIMessage turns).
-            ``intent``
-                Classified intent — used for logging and telemetry only.
-            ``tool_result``
-                Structured DB data dict when a tool was called successfully.
-                ``None`` for direct-response intents (chitchat, faq, unknown).
-            ``tool_error``
-                Error string when tool execution failed after retries.
-                ``None`` on success or when no tool was called.
-            ``user_id``, ``session_id``, ``user_role``
-                Identity and RBAC fields.
-            ``context_summary``, ``customer_history``
-                Memory context from Redis and PostgreSQL.
+                ``messages``
+                    ``[AIMessage(response_text)]`` — the add_messages reducer
+                    appends this to the existing history without overwriting it.
+                ``output_safe``
+                    ``True`` as the initial value.  The ``guardrails_out`` node
+                    reads this and may flip it to ``False`` if a violation is
+                    detected, triggering a rewrite loop (max 2 retries).
+        """
+        response_path = _resolve_response_path(state)
+        log = logger.bind(
+            user_id=state.get("user_id"),
+            session_id=state.get("session_id"),
+            intent=state.get("intent"),
+            response_path=response_path,
+        )
 
-    Returns:
-        Partial AgentState dict with:
+        log.info("response_generator.started")
 
-            ``messages``
-                ``[AIMessage(response_text)]`` — the add_messages reducer
-                appends this to the existing history without overwriting it.
-            ``output_safe``
-                ``True`` as the initial value.  The ``guardrails_out`` node
-                reads this and may flip it to ``False`` if a violation is
-                detected, triggering a rewrite loop (max 2 retries).
-    """
-    response_path = _resolve_response_path(state)
-    log = logger.bind(
-        user_id=state.get("user_id"),
-        session_id=state.get("session_id"),
-        intent=state.get("intent"),
-        response_path=response_path,
-    )
+        fallback = _FALLBACK_TOOL_ERROR if state.get("tool_error") else _FALLBACK_GENERIC
 
-    log.info("response_generator.started")
+        try:
+            messages = _build_messages(state)
+            llm_response = await llm.ainvoke(messages)
+            content: str = str(llm_response.content).strip()
 
-    # Select the appropriate fallback based on whether a tool was involved
-    fallback = _FALLBACK_TOOL_ERROR if state.get("tool_error") else _FALLBACK_GENERIC
+            if not content:
+                log.warning("response_generator.empty_llm_response")
+                content = fallback
 
-    # ------------------------------------------------------------------
-    # 1. Build message list and call LLM
-    # ------------------------------------------------------------------
-    try:
-        messages = _build_messages(state)
-        llm = _get_llm()
-        llm_response = await llm.ainvoke(messages)
-
-        # content is always str for non-streaming text responses;
-        # str() cast is a safety net for unexpected content types.
-        content: str = str(llm_response.content).strip()
-
-        if not content:
-            log.warning("response_generator.empty_llm_response")
+        except Exception as exc:  # noqa: BLE001
+            log.error(
+                "response_generator.llm_error",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             content = fallback
 
-    except Exception as exc:  # noqa: BLE001
-        log.error(
-            "response_generator.llm_error",
-            error=str(exc),
-            error_type=type(exc).__name__,
+        log.info(
+            "response_generator.completed",
+            response_length=len(content),
+            response_path=response_path,
         )
-        content = fallback
 
-    # ------------------------------------------------------------------
-    # 2. Emit telemetry and return partial state update
-    # ------------------------------------------------------------------
-    log.info(
-        "response_generator.completed",
-        response_length=len(content),
-        response_path=response_path,
-    )
+        return {
+            "messages": [AIMessage(content=content)],
+            "output_safe": True,
+        }
 
-    return {
-        # add_messages reducer appends; does not overwrite history
-        "messages": [AIMessage(content=content)],
-        # Optimistic starting value — guardrails_out validates and may flip
-        "output_safe": True,
-    }
-
+    return response_generator_node

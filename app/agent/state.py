@@ -114,8 +114,10 @@ class AgentState(TypedDict):
     
     guardrail_violation: str | None
 
-    retry_count: int
-    
+    tool_retry_count: int
+
+    output_retry_count: int
+
     context_summary: str | None
 
     customer_history: dict | None
@@ -151,7 +153,8 @@ def create_initial_state(
         output_safe=True,
         guardrail_violation=None,
         # Control
-        retry_count=0,
+        tool_retry_count=0,
+        output_retry_count=0,
         # Memory
         context_summary=None,
         customer_history=None,

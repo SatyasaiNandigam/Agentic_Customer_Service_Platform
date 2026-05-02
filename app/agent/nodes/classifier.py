@@ -12,7 +12,6 @@ from app.agent.state import (
     AgentState,
     IntentType,
 )
-from app.config import get_settings
 
 logger = structlog.get_logger(__name__)
 
@@ -33,21 +32,6 @@ _TOOL_DOMAINS: frozenset[str] = frozenset({"need_information", "need_assistance"
 class ClassifierOutput(BaseModel):
     intent: IntentType
     confidence: float
-
-
-_llm: ChatOpenAI | None = None
-
-
-def _get_llm() -> ChatOpenAI:
-    global _llm
-    if _llm is None:
-        settings = get_settings()
-        _llm = ChatOpenAI(
-            model=settings.classifier_model,
-            temperature=0.0,
-            max_tokens=128,
-        )
-    return _llm
 
 
 def _extract_last_human_message(state: AgentState) -> str | None:
@@ -105,91 +89,95 @@ def _validate_intent_for_domain(intent: IntentType, domain: str) -> IntentType:
     return intent
 
 
-async def classifier_node(state: AgentState) -> dict:
-    """Classify the customer's specific intent within their domain.
+def make_classifier_node(llm: ChatOpenAI):
+    """Return a classifier node coroutine that uses the provided LLM."""
 
-    Runs after customer_delegator_node. Reads the customer_domain from state
-    and builds a focused prompt containing only the intents valid for that
-    domain — the bounded-context guarantee. Returns the fine-grained intent
-    and routing flags.
+    async def classifier_node(state: AgentState) -> dict:
+        """Classify the customer's specific intent within their domain.
 
-    Args:
-        state: Current AgentState. Must have customer_domain set by the
-               delegator and at least one HumanMessage in messages.
+        Runs after customer_delegator_node. Reads the customer_domain from state
+        and builds a focused prompt containing only the intents valid for that
+        domain — the bounded-context guarantee. Returns the fine-grained intent
+        and routing flags.
 
-    Returns:
-        Partial state update with keys:
-            - intent           (IntentType)
-            - confidence       (float)
-            - requires_tool    (bool)
-            - needs_escalation (bool)
-    """
-    log = logger.bind(
-        user_id=state.get("user_id"),
-        session_id=state.get("session_id"),
-    )
+        Args:
+            state: Current AgentState. Must have customer_domain set by the
+                   delegator and at least one HumanMessage in messages.
 
-    domain = state.get("customer_domain", "need_advice")
-
-    fallback: dict = {
-        "intent": _DOMAIN_FALLBACK_INTENT.get(domain, "unknown"),
-        "confidence": 0.0,
-        "requires_tool": domain in _TOOL_DOMAINS,
-        "needs_escalation": False,
-    }
-
-    user_message = _extract_last_human_message(state)
-    if not user_message:
-        log.warning("classifier.no_human_message")
-        return fallback
-
-    log.info("classifier.started", message_preview=user_message[:80], domain=domain)
-
-    prior_messages = state["messages"][:-1]
-    recent_history = prior_messages[-4:] if prior_messages else None
-
-    try:
-        messages = build_domain_classifier_messages(
-            user_message, domain=domain, history=recent_history
+        Returns:
+            Partial state update with keys:
+                - intent           (IntentType)
+                - confidence       (float)
+                - requires_tool    (bool)
+                - needs_escalation (bool)
+        """
+        log = logger.bind(
+            user_id=state.get("user_id"),
+            session_id=state.get("session_id"),
         )
-        llm = _get_llm()
-        result: ClassifierOutput = await llm.with_structured_output(ClassifierOutput).ainvoke(messages)
-        intent = result.intent
-        confidence = result.confidence
-    except Exception as exc:  # noqa: BLE001
-        log.error(
-            "classifier.llm_error",
-            error=str(exc),
-            error_type=type(exc).__name__,
+
+        domain = state.get("customer_domain", "need_advice")
+
+        fallback: dict = {
+            "intent": _DOMAIN_FALLBACK_INTENT.get(domain, "unknown"),
+            "confidence": 0.0,
+            "requires_tool": domain in _TOOL_DOMAINS,
+            "needs_escalation": False,
+        }
+
+        user_message = _extract_last_human_message(state)
+        if not user_message:
+            log.warning("classifier.no_human_message")
+            return fallback
+
+        log.info("classifier.started", message_preview=user_message[:80], domain=domain)
+
+        prior_messages = state["messages"][:-1]
+        recent_history = prior_messages[-4:] if prior_messages else None
+
+        try:
+            messages = build_domain_classifier_messages(
+                user_message, domain=domain, history=recent_history
+            )
+            result: ClassifierOutput = await llm.with_structured_output(ClassifierOutput).ainvoke(messages)
+            intent = result.intent
+            confidence = result.confidence
+        except Exception as exc:  # noqa: BLE001
+            log.error(
+                "classifier.llm_error",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+            return fallback
+
+        log.debug("classifier.raw", intent=intent, confidence=confidence, domain=domain)
+
+        if confidence < CONFIDENCE_THRESHOLD:
+            intent = _DOMAIN_FALLBACK_INTENT.get(domain, "unknown")
+
+        intent = _validate_intent_for_domain(intent, domain)
+        flags = _derive_flags(intent, domain)
+
+        output = {
+            "intent": intent,
+            "confidence": confidence,
+            "requires_tool": flags["requires_tool"],
+            "needs_escalation": flags["needs_escalation"],
+        }
+
+        log.info(
+            "classifier.completed",
+            intent=output["intent"],
+            confidence=output["confidence"],
+            domain=domain,
+            requires_tool=output["requires_tool"],
+            needs_escalation=output["needs_escalation"],
+            routing=(
+                "escalate" if output["needs_escalation"]
+                else ("tool" if output["requires_tool"] else "direct")
+            ),
         )
-        return fallback
 
-    log.debug("classifier.raw", intent=intent, confidence=confidence, domain=domain)
+        return output
 
-    if confidence < CONFIDENCE_THRESHOLD:
-        intent = _DOMAIN_FALLBACK_INTENT.get(domain, "unknown")
-
-    intent = _validate_intent_for_domain(intent, domain)
-    flags = _derive_flags(intent, domain)
-
-    output = {
-        "intent": intent,
-        "confidence": confidence,
-        "requires_tool": flags["requires_tool"],
-        "needs_escalation": flags["needs_escalation"],
-    }
-
-    log.info(
-        "classifier.completed",
-        intent=output["intent"],
-        confidence=output["confidence"],
-        domain=domain,
-        requires_tool=output["requires_tool"],
-        needs_escalation=output["needs_escalation"],
-        routing=(
-            "escalate" if output["needs_escalation"]
-            else ("tool" if output["requires_tool"] else "direct")
-        ),
-    )
-
-    return output
+    return classifier_node

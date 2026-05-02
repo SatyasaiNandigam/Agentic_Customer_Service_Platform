@@ -232,7 +232,8 @@ _TURN_RESET: dict = {
     "input_safe": True,
     "output_safe": True,
     "guardrail_violation": None,
-    "retry_count": 0,
+    "tool_retry_count": 0,
+    "output_retry_count": 0,
 }
 
 

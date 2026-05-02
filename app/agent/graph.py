@@ -1,5 +1,6 @@
 import structlog
 from langchain_core.messages import AIMessage
+from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 
 from app.agent.edges import (
@@ -23,20 +24,19 @@ from app.agent.edges import (
 from app.memory.summarizer import maybe_summarize
 
 from app.agent.nodes import (
-    classifier_node,
-    customer_delegator_node,
-    response_generator_node,
+    make_classifier_node,
+    make_customer_delegator_node,
+    make_response_generator_node,
     tool_executor_node,
-    tool_planner_node,
+    make_tool_planner_node,
 )
 
-from app.guardrails import guardrails_in_node , guardrails_out_node
+from app.guardrails import guardrails_in_node, guardrails_out_node
 
 from app.agent.state import AgentState
+from app.config import get_settings
 
 logger = structlog.get_logger(__name__)
-
-
 
 
 async def _stub_human_handoff(state: AgentState) -> dict:
@@ -68,17 +68,16 @@ async def _stub_human_handoff(state: AgentState) -> dict:
         ],
         "needs_escalation": True,
     }
-    
-    
+
+
 def build_graph(checkpointer=None):
     """Build and compile the LangGraph StateGraph.
 
     Constructs the full agent workflow: registers every node (real + stubs),
     wires all conditional routing edges, and compiles to a ``CompiledStateGraph``.
 
-    Separation from module-level instantiation makes the factory directly
-    testable — tests can call ``build_graph()`` to get a fresh graph with a
-    custom checkpointer or mocked nodes without affecting the production singleton.
+    LLM clients are instantiated here from settings and injected into node
+    factories — no global singletons, fully restartable between tests.
 
     Returns:
         A compiled ``CompiledStateGraph`` that exposes:
@@ -86,24 +85,47 @@ def build_graph(checkpointer=None):
         - ``graph.astream_events(state, config)``    — async event stream
           used by the WebSocket endpoint for streaming token-by-token output
     """
+    settings = get_settings()
+
+    # Instantiate LLM clients once per graph build — injected into node closures.
+    delegator_llm = ChatOpenAI(
+        model=settings.classifier_model,
+        temperature=0.0,
+        max_tokens=64,
+    )
+    classifier_llm = ChatOpenAI(
+        model=settings.classifier_model,
+        temperature=0.0,
+        max_tokens=128,
+    )
+    tool_planner_llm = ChatOpenAI(
+        model=settings.classifier_model,
+        temperature=0,
+        max_tokens=settings.openai_max_tokens,
+    )
+    response_llm = ChatOpenAI(
+        model=settings.openai_model,
+        temperature=0.7,
+        max_tokens=settings.openai_max_tokens,
+    )
+
     workflow = StateGraph(AgentState)
 
-    workflow.add_node(NODE_CUSTOMER_DELEGATOR, customer_delegator_node)
-    workflow.add_node(NODE_CLASSIFIER, classifier_node)
+    workflow.add_node(NODE_CUSTOMER_DELEGATOR, make_customer_delegator_node(delegator_llm))
+    workflow.add_node(NODE_CLASSIFIER, make_classifier_node(classifier_llm))
     workflow.add_node(NODE_MEMORY, maybe_summarize)
-    workflow.add_node(NODE_RESPONSE_GENERATOR, response_generator_node)
+    workflow.add_node(NODE_RESPONSE_GENERATOR, make_response_generator_node(response_llm))
 
-    workflow.add_node(NODE_TOOL_PLANNER, tool_planner_node)
+    workflow.add_node(NODE_TOOL_PLANNER, make_tool_planner_node(tool_planner_llm))
     workflow.add_node(NODE_TOOL_EXECUTOR, tool_executor_node)
 
     workflow.add_node(NODE_GUARDRAILS_IN, guardrails_in_node)
     workflow.add_node(NODE_GUARDRAILS_OUT, guardrails_out_node)
     workflow.add_node(NODE_HUMAN_HANDOFF, _stub_human_handoff)
-    
+
     # Every invocation enters at guardrails_in
     workflow.add_edge(START, NODE_GUARDRAILS_IN)
-    
-    
+
     workflow.add_conditional_edges(
         NODE_GUARDRAILS_IN,
         route_after_guardrails_in,
@@ -131,11 +153,9 @@ def build_graph(checkpointer=None):
             NODE_HUMAN_HANDOFF: NODE_HUMAN_HANDOFF,
         },
     )
-    
- 
+
     workflow.add_edge(NODE_TOOL_PLANNER, NODE_TOOL_EXECUTOR)
-    
-    
+
     workflow.add_conditional_edges(
         NODE_TOOL_EXECUTOR,
         route_after_tool_executor,
@@ -148,7 +168,6 @@ def build_graph(checkpointer=None):
     workflow.add_edge(NODE_MEMORY, NODE_RESPONSE_GENERATOR)
     workflow.add_edge(NODE_RESPONSE_GENERATOR, NODE_GUARDRAILS_OUT)
 
-
     workflow.add_conditional_edges(
         NODE_GUARDRAILS_OUT,
         route_after_guardrails_out,
@@ -158,9 +177,8 @@ def build_graph(checkpointer=None):
         },
     )
 
-   
     workflow.add_edge(NODE_HUMAN_HANDOFF, END)
-    
+
     compiled = workflow.compile(checkpointer=checkpointer)
 
     logger.info(
@@ -183,4 +201,3 @@ def build_graph(checkpointer=None):
     )
 
     return compiled
-

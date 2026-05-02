@@ -370,7 +370,7 @@ async def guardrails_out_node(state: AgentState) -> dict:
     Runs after ``response_generator`` and before graph termination.  Checks
     for PII leakage, SQL/system leakage, and hallucination against tool output.
 
-    When a violation is found, increments ``retry_count`` so
+    When a violation is found, increments ``output_retry_count`` so
     ``route_after_guardrails_out`` can cap rewrites at ``MAX_OUTPUT_RETRIES``.
 
     The node never raises — all failures return a partial state dict with
@@ -387,12 +387,12 @@ async def guardrails_out_node(state: AgentState) -> dict:
     user_id: int = state.get("user_id", 0)
     session_id: str = state.get("session_id", "")
     tool_result: dict | None = state.get("tool_result")
-    retry_count: int = state.get("retry_count", 0)
+    output_retry_count: int = state.get("output_retry_count", 0)
 
     log = logger.bind(
         user_id=user_id,
         session_id=session_id,
-        retry_count=retry_count,
+        output_retry_count=output_retry_count,
         intent=state.get("intent"),
     )
     log.info("guardrails_out.started")
@@ -422,7 +422,7 @@ async def guardrails_out_node(state: AgentState) -> dict:
         return {
             "output_safe": False,
             "guardrail_violation": pii_violation,
-            "retry_count": retry_count + 1,
+            "output_retry_count": output_retry_count + 1,
         }
 
     # ------------------------------------------------------------------
@@ -438,7 +438,7 @@ async def guardrails_out_node(state: AgentState) -> dict:
         return {
             "output_safe": False,
             "guardrail_violation": system_violation,
-            "retry_count": retry_count + 1,
+            "output_retry_count": output_retry_count + 1,
         }
 
     # ------------------------------------------------------------------
@@ -482,7 +482,7 @@ async def guardrails_out_node(state: AgentState) -> dict:
                 return {
                     "output_safe": False,
                     "guardrail_violation": violation,
-                    "retry_count": retry_count + 1,
+                    "output_retry_count": output_retry_count + 1,
                 }
         else:
             log.debug("guardrails_out.grounding_fast_passed")
@@ -493,7 +493,7 @@ async def guardrails_out_node(state: AgentState) -> dict:
     log.info(
         "guardrails_out.passed",
         had_tool_result=tool_result is not None,
-        retry_count=retry_count,
+        output_retry_count=output_retry_count,
     )
     return {
         "output_safe": True,
