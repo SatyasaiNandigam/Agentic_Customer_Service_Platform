@@ -88,7 +88,6 @@ class Settings(BaseSettings):
     )
     
     
-    agent_max_turns: int = 5           # hard safety limit per conversation turn
     agent_tool_read_limit: int = 10    # max READ tool calls per graph invocation
     agent_tool_write_limit: int = 3    # max WRITE tool calls per graph invocation
     agent_tool_destructive_limit: int = 1  # max DESTRUCTIVE tool calls per invocation

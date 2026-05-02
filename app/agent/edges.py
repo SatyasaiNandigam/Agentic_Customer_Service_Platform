@@ -8,9 +8,11 @@ logger = structlog.get_logger(__name__)
 
 
 NODE_GUARDRAILS_IN: str = "guardrails_in"
+NODE_CUSTOMER_DELEGATOR: str = "customer_delegator"
 NODE_CLASSIFIER: str = "classifier"
 NODE_TOOL_PLANNER: str = "tool_planner"
 NODE_TOOL_EXECUTOR: str = "tool_executor"
+NODE_MEMORY: str = "memory"
 NODE_RESPONSE_GENERATOR: str = "response_generator"
 NODE_GUARDRAILS_OUT: str = "guardrails_out"
 NODE_HUMAN_HANDOFF: str = "human_handoff"
@@ -30,25 +32,18 @@ MAX_OUTPUT_RETRIES: int = 2
 
 
 def route_after_guardrails_in(state: AgentState) -> str:
-    """Decide whether to proceed to the classifier or terminate immediately.
+    """Proceed to customer_delegator or terminate if the input was blocked.
 
-    Two termination conditions are checked:
-
-    1. **Input blocked** (``input_safe=False``): the guardrail detected a
-       prompt-injection attempt, PII, or rate-limit exceeded.  Terminate with
-       END — the guardrail node is responsible for appending a rejection
-       AIMessage before returning, so the caller always receives a response.
-
-    2. **Turn limit reached** (``turn_count >= max_turns``): the conversation
-       has hit the hard safety cap.  Terminate to prevent unbounded loops.
-       The chat endpoint should surface this to the user (e.g. "session limit
-       reached — start a new conversation").
+    Terminates with END only when ``input_safe=False`` — i.e. the guardrail
+    detected injection, PII violation, or rate-limit exceeded. The guardrail
+    node always appends a rejection AIMessage before returning so the caller
+    receives a response even on the END path.
 
     Args:
         state: Current AgentState.
 
     Returns:
-        ``NODE_CLASSIFIER`` when safe to proceed, ``END`` otherwise.
+        ``NODE_CUSTOMER_DELEGATOR`` when safe to proceed, ``END`` otherwise.
     """
     log = logger.bind(
         user_id=state.get("user_id"),
@@ -63,16 +58,36 @@ def route_after_guardrails_in(state: AgentState) -> str:
         )
         return END  # type: ignore[return-value]
 
-    if state["turn_count"] >= state["max_turns"]:
-        log.warning(
-            "edge.guardrails_in->END",
-            reason="turn_limit_reached",
-            turn_count=state["turn_count"],
-            max_turns=state["max_turns"],
-        )
-        return END  # type: ignore[return-value]
+    log.debug("edge.guardrails_in->customer_delegator")
+    return NODE_CUSTOMER_DELEGATOR
 
-    log.debug("edge.guardrails_in->classifier")
+
+def route_after_delegator(state: AgentState) -> str:
+    """Route to human_handoff for escalate/block domains, or proceed to classifier.
+
+    The delegator has already determined the customer's broad domain. Escalation
+    and block signals are handled here before the intent classifier runs, so
+    frustrated or malicious messages never reach the tool-selection path.
+
+    Args:
+        state: Current AgentState with customer_domain set by the delegator.
+
+    Returns:
+        NODE_HUMAN_HANDOFF for escalate/block, NODE_CLASSIFIER otherwise.
+    """
+    log = logger.bind(
+        user_id=state.get("user_id"),
+        session_id=state.get("session_id"),
+        customer_domain=state.get("customer_domain"),
+    )
+
+    domain = state.get("customer_domain", "need_advice")
+
+    if domain in ("escalate", "block"):
+        log.info("edge.delegator->human_handoff", domain=domain)
+        return NODE_HUMAN_HANDOFF
+
+    log.info("edge.delegator->classifier", domain=domain)
     return NODE_CLASSIFIER
 
 
@@ -114,11 +129,11 @@ def route_after_classifier(state: AgentState) -> str:
 
     # chitchat / faq_policy / unknown -> direct conversational response
     log.info(
-        "edge.classifier->response_generator",
+        "edge.classifier->memory",
         intent=state["intent"],
         reason="direct_response",
     )
-    return NODE_RESPONSE_GENERATOR
+    return NODE_MEMORY
 
 
 def route_after_tool_executor(state: AgentState) -> str:
@@ -165,18 +180,18 @@ def route_after_tool_executor(state: AgentState) -> str:
 
         # Retries exhausted — response_generator will acknowledge the failure
         log.warning(
-            "edge.tool_executor->response_generator",
+            "edge.tool_executor->memory",
             reason="retries_exhausted",
             retry_count=retry_count,
             error_preview=str(tool_error)[:120],
         )
-        return NODE_RESPONSE_GENERATOR
+        return NODE_MEMORY
 
     log.info(
-        "edge.tool_executor->response_generator",
+        "edge.tool_executor->memory",
         reason="tool_success",
     )
-    return NODE_RESPONSE_GENERATOR
+    return NODE_MEMORY
 
 
 def route_after_guardrails_out(state: AgentState) -> str:

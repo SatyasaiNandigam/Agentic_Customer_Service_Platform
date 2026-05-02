@@ -288,7 +288,7 @@ async def post_chat(
         "user_id": str(user.user_id),
         "session_id": session_id,
         "user_role": user.role,
-        "max_turns": settings.agent_max_turns,
+
         "customer_history": customer_history,
         **_TURN_RESET,
     }
@@ -359,7 +359,7 @@ async def _stream_agent_response(
         "user_id": str(user_id),
         "session_id": session_id,
         "user_role": user_role,
-        "max_turns": settings.agent_max_turns,
+
         "customer_history": customer_history,
         **_TURN_RESET,
     }
@@ -635,7 +635,7 @@ async def websocket_chat(
                 "user_id": str(user.user_id),
                 "session_id": session_id,
                 "user_role": user.role,
-                "max_turns": settings.agent_max_turns,
+        
                 "customer_history": customer_history,
                 **_TURN_RESET,
             }

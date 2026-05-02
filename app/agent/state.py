@@ -21,28 +21,47 @@ IntentType = Literal[
     "unknown",
 ]
 
-TOOL_INTENTS: frozenset[IntentType] = frozenset(
-    {
-        "order_status",
-        "order_cancel",
-        "shipment_tracking",
-        "refund_request",
-        "refund_status",
-        "product_inquiry",
-        "product_search",
-        "account_info",
-        "review_lookup",
-    }
-)
+CustomerDomain = Literal[
+    "need_information",
+    "need_assistance",
+    "need_advice",
+    "escalate",
+    "block",
+]
 
+# Domain-bounded intent sets — used by classifier to load only the relevant
+# intent context after the delegator has determined the customer domain.
+INFORMATION_INTENTS: frozenset[IntentType] = frozenset({
+    "order_status",
+    "shipment_tracking",
+    "refund_status",
+    "account_info",
+    "review_lookup",
+    "product_inquiry",
+    "product_search",
+})
 
-DIRECT_RESPONSE_INTENTS: frozenset[IntentType] = frozenset(
-    {
-        "chitchat",
-        "faq_policy",
-        "unknown",
-    }
-)
+ASSISTANCE_INTENTS: frozenset[IntentType] = frozenset({
+    "order_cancel",
+    "refund_request",
+})
+
+ADVICE_INTENTS: frozenset[IntentType] = frozenset({
+    "faq_policy",
+    "chitchat",
+    "unknown",
+})
+
+DOMAIN_INTENT_MAP: dict[str, frozenset[IntentType]] = {
+    "need_information": INFORMATION_INTENTS,
+    "need_assistance": ASSISTANCE_INTENTS,
+    "need_advice": ADVICE_INTENTS,
+}
+
+# Kept for backward compatibility with edges/guardrails that still reference them.
+TOOL_INTENTS: frozenset[IntentType] = INFORMATION_INTENTS | ASSISTANCE_INTENTS
+
+DIRECT_RESPONSE_INTENTS: frozenset[IntentType] = ADVICE_INTENTS
 
 ESCALATION_INTENTS: frozenset[IntentType] = frozenset({"complaint"})
 
@@ -69,8 +88,10 @@ class AgentState(TypedDict):
     
     user_role: Role
     
+    customer_domain: CustomerDomain
+
     intent: IntentType
-    
+
     confidence: float
     
     requires_tool: bool
@@ -92,11 +113,7 @@ class AgentState(TypedDict):
     output_safe: bool
     
     guardrail_violation: str | None
-    
-    turn_count: int
-    
-    max_turns: int
-    
+
     retry_count: int
     
     context_summary: str | None
@@ -109,23 +126,8 @@ def create_initial_state(
     user_id: str,
     session_id: str,
     user_role: Role = "customer",
-    max_turns: int = 5,
 ) -> AgentState:
-    """Return a fully-initialised AgentState for a new graph invocation.
-
-    All mutable fields are set to their safe defaults so nodes never have to
-    handle missing keys — TypedDict doesn't enforce defaults at runtime, but
-    callers that forget a field get a KeyError rather than a silent AttributeError.
-
-    Args:
-        user_id:    Authenticated user ID from the JWT (required).
-        session_id: Redis session key prefix (required).
-        user_role:  Role from JWT, defaults to "customer" (least privilege).
-        max_turns:  Hard turn limit; defaults to settings value (5).
-
-    Returns:
-        Populated AgentState dict ready for ``graph.invoke(state)``.
-    """
+    """Return a fully-initialised AgentState for a new graph invocation."""
     return AgentState(
         # Core
         messages=[],
@@ -133,6 +135,7 @@ def create_initial_state(
         session_id=session_id,
         user_role=user_role,
         # Classification
+        customer_domain="need_advice",
         intent="unknown",
         confidence=0.0,
         requires_tool=False,
@@ -148,8 +151,6 @@ def create_initial_state(
         output_safe=True,
         guardrail_violation=None,
         # Control
-        turn_count=0,
-        max_turns=max_turns,
         retry_count=0,
         # Memory
         context_summary=None,

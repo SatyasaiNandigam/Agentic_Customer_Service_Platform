@@ -14,14 +14,8 @@ logger = structlog.get_logger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-# Summarise when active messages consume more than this fraction of the budget
-SUMMARIZE_THRESHOLD_RATIO: float = 0.70
-
-# Summarise the oldest this fraction of messages (keep the rest verbatim)
-SUMMARIZE_OLDEST_RATIO: float = 0.50
-
-# Minimum messages before we bother summarising (avoid trivially small summaries)
-MIN_MESSAGES_TO_SUMMARIZE: int = 10
+# Keep only this many recent messages verbatim; summarise everything older.
+KEEP_LAST_N_MESSAGES: int = 10
 
 # System prompt for the summarizer call
 _SUMMARIZER_SYSTEM = (
@@ -149,87 +143,53 @@ async def _call_summarizer(messages_to_summarize: list[BaseMessage]) -> str:
 
 
 async def maybe_summarize(state: AgentState) -> dict:
-    """Check the context budget and summarise if the threshold is exceeded.
+    """Trim the active message list to the last N messages, summarising the rest.
 
-    Called by the response_generator node (or a dedicated memory node) after
-    each turn to keep the active message list within the token budget.
-
-    Algorithm:
-    1. Estimate total tokens for all messages in ``state["messages"]``.
-    2. If below ``SUMMARIZE_THRESHOLD_RATIO * budget``, return ``{}`` (no-op).
-    3. Split messages: oldest ``SUMMARIZE_OLDEST_RATIO`` → summarise;
-       newest remainder → keep verbatim.
-    4. Call the summarizer LLM to produce the summary.
-    5. Prepend any *existing* ``state["context_summary"]`` to the new summary
-       so accumulated context is never lost.
-    6. Update ``conv:{session_id}:meta`` in Redis with the new summary text.
-    7. Return partial AgentState with updated ``context_summary`` and trimmed
-       ``messages`` (the messages list is replaced — the ``add_messages``
-       reducer deduplicates by ID so stale messages are not re-appended).
+    Runs as a dedicated graph node before response_generator. When the
+    conversation exceeds KEEP_LAST_N_MESSAGES, the oldest messages are
+    condensed into ``context_summary`` which is injected into the system
+    prompt. Messages are NOT removed from state so the client-side history
+    remains complete; the response_generator independently limits the slice
+    it passes to the LLM.
 
     Args:
         state: Full AgentState.
 
     Returns:
-        Partial AgentState dict with ``context_summary`` and optionally a
-        trimmed ``messages`` list.  Returns ``{}`` when summarization was not
-        needed or an unrecoverable error occurred.
+        Partial AgentState dict with updated ``context_summary``.
+        Returns ``{}`` when the message count is within the budget (no-op).
     """
-    settings = get_settings()
-    budget = settings.openai_context_budget_tokens
-    threshold = int(budget * SUMMARIZE_THRESHOLD_RATIO)
-
     messages: list[BaseMessage] = state.get("messages", [])
     session_id: str = state.get("session_id", "")
     existing_summary: str | None = state.get("context_summary")
 
-    if len(messages) < MIN_MESSAGES_TO_SUMMARIZE:
+    if len(messages) <= KEEP_LAST_N_MESSAGES:
         return {}
 
-    total_tokens = _total_token_estimate(messages)
-    if total_tokens <= threshold:
-        logger.debug(
-            "summarizer.below_threshold",
-            estimated_tokens=total_tokens,
-            threshold=threshold,
-        )
-        return {}
+    messages_to_summarize = messages[:-KEEP_LAST_N_MESSAGES]
 
     logger.info(
-        "summarizer.threshold_exceeded",
-        estimated_tokens=total_tokens,
-        threshold=threshold,
-        message_count=len(messages),
+        "summarizer.triggered",
         session_id=session_id,
+        total=len(messages),
+        summarizing=len(messages_to_summarize),
+        keeping=KEEP_LAST_N_MESSAGES,
     )
 
-    # Split: oldest half → summarise, newest half → keep verbatim
-    split_point = max(1, int(len(messages) * SUMMARIZE_OLDEST_RATIO))
-    messages_to_summarize = messages[:split_point]
-    messages_to_keep = messages[split_point:]
-
-    # Produce the new summary
     new_summary = await _call_summarizer(messages_to_summarize)
 
-    # Chain with the previous summary (if any) so no context is lost
-    if existing_summary:
-        combined_summary = f"{existing_summary}\n\n---\n\n{new_summary}"
-    else:
-        combined_summary = new_summary
+    combined_summary = (
+        f"{existing_summary}\n\n---\n\n{new_summary}" if existing_summary else new_summary
+    )
 
     logger.info(
         "summarizer.complete",
         session_id=session_id,
         summarized_count=len(messages_to_summarize),
-        kept_count=len(messages_to_keep),
         summary_tokens=_estimate_tokens(combined_summary),
     )
 
-    # Return partial state: new summary + the trimmed message list.
-    # Returning the trimmed list here replaces the full list in the state —
-    # the add_messages reducer will merge by ID, so only messages whose IDs
-    # are not already in the list will be appended (no duplication).
-    return {
-        "context_summary": combined_summary,
-        "messages": messages_to_keep,
-    }
+    # Only update the summary — messages are left intact in state so the
+    # client-side history remains complete. The response_generator limits
+    # how many messages it passes to the LLM separately.
+    return {"context_summary": combined_summary}

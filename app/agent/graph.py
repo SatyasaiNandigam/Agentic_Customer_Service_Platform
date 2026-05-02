@@ -6,20 +6,25 @@ from app.agent.edges import (
     MAX_OUTPUT_RETRIES,
     MAX_TOOL_RETRIES,
     NODE_CLASSIFIER,
+    NODE_CUSTOMER_DELEGATOR,
     NODE_GUARDRAILS_IN,
     NODE_GUARDRAILS_OUT,
     NODE_HUMAN_HANDOFF,
+    NODE_MEMORY,
     NODE_RESPONSE_GENERATOR,
     NODE_TOOL_EXECUTOR,
     NODE_TOOL_PLANNER,
     route_after_classifier,
+    route_after_delegator,
     route_after_guardrails_in,
     route_after_guardrails_out,
     route_after_tool_executor,
 )
+from app.memory.summarizer import maybe_summarize
 
 from app.agent.nodes import (
     classifier_node,
+    customer_delegator_node,
     response_generator_node,
     tool_executor_node,
     tool_planner_node,
@@ -83,13 +88,15 @@ def build_graph(checkpointer=None):
     """
     workflow = StateGraph(AgentState)
 
+    workflow.add_node(NODE_CUSTOMER_DELEGATOR, customer_delegator_node)
     workflow.add_node(NODE_CLASSIFIER, classifier_node)
+    workflow.add_node(NODE_MEMORY, maybe_summarize)
     workflow.add_node(NODE_RESPONSE_GENERATOR, response_generator_node)
-    
+
     workflow.add_node(NODE_TOOL_PLANNER, tool_planner_node)
     workflow.add_node(NODE_TOOL_EXECUTOR, tool_executor_node)
-    
-    workflow.add_node(NODE_GUARDRAILS_IN, guardrails_in_node)       
+
+    workflow.add_node(NODE_GUARDRAILS_IN, guardrails_in_node)
     workflow.add_node(NODE_GUARDRAILS_OUT, guardrails_out_node)
     workflow.add_node(NODE_HUMAN_HANDOFF, _stub_human_handoff)
     
@@ -101,18 +108,26 @@ def build_graph(checkpointer=None):
         NODE_GUARDRAILS_IN,
         route_after_guardrails_in,
         {
-            NODE_CLASSIFIER: NODE_CLASSIFIER,
+            NODE_CUSTOMER_DELEGATOR: NODE_CUSTOMER_DELEGATOR,
             END: END,
         },
     )
-    
-    
+
+    workflow.add_conditional_edges(
+        NODE_CUSTOMER_DELEGATOR,
+        route_after_delegator,
+        {
+            NODE_CLASSIFIER: NODE_CLASSIFIER,
+            NODE_HUMAN_HANDOFF: NODE_HUMAN_HANDOFF,
+        },
+    )
+
     workflow.add_conditional_edges(
         NODE_CLASSIFIER,
         route_after_classifier,
         {
             NODE_TOOL_PLANNER: NODE_TOOL_PLANNER,
-            NODE_RESPONSE_GENERATOR: NODE_RESPONSE_GENERATOR,
+            NODE_MEMORY: NODE_MEMORY,
             NODE_HUMAN_HANDOFF: NODE_HUMAN_HANDOFF,
         },
     )
@@ -126,11 +141,11 @@ def build_graph(checkpointer=None):
         route_after_tool_executor,
         {
             NODE_TOOL_PLANNER: NODE_TOOL_PLANNER,
-            NODE_RESPONSE_GENERATOR: NODE_RESPONSE_GENERATOR,
+            NODE_MEMORY: NODE_MEMORY,
         },
     )
-    
-    
+
+    workflow.add_edge(NODE_MEMORY, NODE_RESPONSE_GENERATOR)
     workflow.add_edge(NODE_RESPONSE_GENERATOR, NODE_GUARDRAILS_OUT)
 
 
@@ -154,7 +169,9 @@ def build_graph(checkpointer=None):
         max_output_retries=MAX_OUTPUT_RETRIES,
         real_nodes=[
             NODE_GUARDRAILS_IN,
+            NODE_CUSTOMER_DELEGATOR,
             NODE_CLASSIFIER,
+            NODE_MEMORY,
             NODE_RESPONSE_GENERATOR,
             NODE_TOOL_PLANNER,
             NODE_TOOL_EXECUTOR,

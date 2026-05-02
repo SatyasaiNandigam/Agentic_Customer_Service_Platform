@@ -329,29 +329,19 @@ async def guardrails_in_node(state: AgentState) -> dict:
     log = logger.bind(user_id=user_id, session_id=session_id)
     log.info("guardrails_in.started")
 
-    # Turn counter is always incremented — even on block — so the edge can
-    # enforce the hard max_turns cap on the *next* message if this one slips
-    # through somehow.
-    turn_count_update = {"turn_count": state.get("turn_count", 0) + 1}
-
     # ------------------------------------------------------------------
-    # 0. Extract the last human message
+    # 1. Extract the last human message
     # ------------------------------------------------------------------
     human_msg, raw_text = _extract_last_human_message(state)
 
     if human_msg is None or not raw_text:
         log.warning("guardrails_in.no_human_message")
-        # Nothing to guard — pass through so the classifier handles the edge case
-        return {
-            "input_safe": True,
-            "guardrail_violation": None,
-            **turn_count_update,
-        }
+        return {"input_safe": True, "guardrail_violation": None}
 
     log.debug("guardrails_in.message_preview", preview=raw_text[:80])
 
     # ------------------------------------------------------------------
-    # 1. Structural validation + sanitisation
+    # 2. Structural validation + sanitisation
     # ------------------------------------------------------------------
     sanitized, struct_violation = _sanitize_input(
         raw_text, settings.guardrail_max_input_chars
@@ -363,13 +353,10 @@ async def guardrails_in_node(state: AgentState) -> dict:
             reason=struct_violation,
             message_length=len(raw_text),
         )
-        return {
-            **_build_rejection(struct_violation, max_chars=settings.guardrail_max_input_chars),
-            **turn_count_update,
-        }
+        return _build_rejection(struct_violation, max_chars=settings.guardrail_max_input_chars)
 
     # ------------------------------------------------------------------
-    # 2. PII detection and redaction
+    # 3. PII detection and redaction
     # ------------------------------------------------------------------
     pii_result = detect_and_redact(sanitized)
 
@@ -377,12 +364,9 @@ async def guardrails_in_node(state: AgentState) -> dict:
         log.info(
             "guardrails_in.pii_redacted",
             summary=pii_result.summary(),
-            # Log type labels only — never log raw PII values
             types_found=[t.value for t in pii_result.pii_types_found],
         )
 
-        # Security concern: API keys or passwords in customer messages are
-        # unusual enough to warrant an elevated warning.
         if PIIType.API_KEY in pii_result.pii_types_found or PIIType.PASSWORD in pii_result.pii_types_found:
             log.warning(
                 "guardrails_in.security_pii_found",
@@ -390,21 +374,17 @@ async def guardrails_in_node(state: AgentState) -> dict:
                        if t in (PIIType.API_KEY, PIIType.PASSWORD)],
             )
 
-        # Replace the original HumanMessage content with the redacted version.
-        # Returning a message with the same id triggers the add_messages reducer
-        # to *update* rather than *append* — the classifier sees clean text.
         redacted_msg = HumanMessage(
             id=human_msg.id,
             content=pii_result.redacted_text,
         )
         pii_update = {"messages": [redacted_msg]}
-        # Use redacted text for all downstream checks in this node
         sanitized = pii_result.redacted_text
     else:
         pii_update = {}
 
     # ------------------------------------------------------------------
-    # 3. Rate limit check
+    # 4. Rate limit check
     # ------------------------------------------------------------------
     is_allowed, msg_count = await check_message_rate_limit(user_id)
 
@@ -415,14 +395,10 @@ async def guardrails_in_node(state: AgentState) -> dict:
             message_count=msg_count,
             limit=settings.rate_limit_messages_per_minute,
         )
-        return {
-            **_build_rejection("rate_limit_exceeded"),
-            **turn_count_update,
-            **pii_update,   # still persist the redaction even when blocking
-        }
+        return {**_build_rejection("rate_limit_exceeded"), **pii_update}
 
     # ------------------------------------------------------------------
-    # 4. Layer 1 — regex injection scan
+    # 5. Layer 1 — regex injection scan
     # ------------------------------------------------------------------
     hard_blocked, soft_flagged, matched_patterns = _scan_injection_layer1(sanitized)
 
@@ -433,14 +409,10 @@ async def guardrails_in_node(state: AgentState) -> dict:
             layer="regex_hard",
             patterns=matched_patterns,
         )
-        return {
-            **_build_rejection("injection_detected"),
-            **turn_count_update,
-            **pii_update,
-        }
+        return {**_build_rejection("injection_detected"), **pii_update}
 
     # ------------------------------------------------------------------
-    # 5. Layer 2 — LLM injection classifier (only when Layer 1 soft-flagged)
+    # 6. Layer 2 — LLM injection classifier (only when Layer 1 soft-flagged)
     # ------------------------------------------------------------------
     if soft_flagged:
         log.info(
@@ -468,25 +440,15 @@ async def guardrails_in_node(state: AgentState) -> dict:
                 confidence=check_result.confidence,
                 violation_type=check_result.violation_type,
             )
-            return {
-                **_build_rejection("injection_detected"),
-                **turn_count_update,
-                **pii_update,
-            }
+            return {**_build_rejection("injection_detected"), **pii_update}
 
     # ------------------------------------------------------------------
-    # 6. All checks passed — safe to proceed
+    # 7. All checks passed — safe to proceed
     # ------------------------------------------------------------------
     log.info(
         "guardrails_in.passed",
         pii_redacted=pii_result.has_pii,
         soft_flagged=soft_flagged,
-        turn_count=turn_count_update["turn_count"],
     )
 
-    return {
-        "input_safe": True,
-        "guardrail_violation": None,
-        **turn_count_update,
-        **pii_update,
-    }
+    return {"input_safe": True, "guardrail_violation": None, **pii_update}

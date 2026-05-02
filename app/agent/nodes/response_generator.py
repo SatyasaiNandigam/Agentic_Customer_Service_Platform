@@ -122,7 +122,9 @@ def _build_messages(state: AgentState) -> list:
     if grounding:
         system_message = SystemMessage(content=system_message.content + grounding)
 
-    return [system_message] + list(state["messages"])
+    all_messages = list(state["messages"])
+    recent_messages = all_messages[-10:] if len(all_messages) > 10 else all_messages
+    return [system_message] + recent_messages
 
 
 def _resolve_response_path(state: AgentState) -> str:
