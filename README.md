@@ -6,14 +6,14 @@
   <img src="https://img.shields.io/badge/LangGraph-Stateful%20Agent-FF6B35?style=for-the-badge" alt="LangGraph"/>
   <img src="https://img.shields.io/badge/OpenAI-gpt--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI"/>
   <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
-  <img src="https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"/>
+  <img src="https://img.shields.io/badge/Redis-7%20%28Cache%20%2F%20Rate%20Limit%29-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"/>
   <img src="https://img.shields.io/badge/FastMCP-2.0%20SSE-00B4AB?style=for-the-badge" alt="FastMCP"/>
   <img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
   <img src="https://img.shields.io/badge/Status-Active%20Development-22C55E?style=for-the-badge" alt="Status"/>
 </p>
 
 <p align="center">
-  A production-ready agentic customer service platform built on a deterministic LangGraph DAG — with a custom FastMCP tool server, dual-layer Redis + PostgreSQL memory, multi-modal API (REST / SSE / WebSocket), role-based access control, and defense-in-depth input/output guardrails.
+  A production-ready agentic customer service platform built on a deterministic LangGraph DAG — with hierarchical intent classification, a custom FastMCP tool server, LangGraph Checkpointer-backed session state, multi-modal API (REST / SSE / WebSocket), role-based access control, and defense-in-depth input/output guardrails.
 </p>
 
 > **Disclaimer:** This project is a reference implementation built for learning and demonstration purposes. "ShopEasy" is a fictional brand. All customer records, orders, products, reviews, and API responses are entirely **synthetic and auto-generated** — they do not represent any real business, individual, or organization. No proprietary data or third-party APIs are used.
@@ -36,13 +36,14 @@ Expect frequent iteration on `app/agent/prompts/`, `app/guardrails/`, and `tools
 
 | Capability | Details |
 |---|---|
-| **Agentic Orchestration** | LangGraph state machine with up to 5 nodes, conditional routing, retry budgets, and hard conversation limits |
+| **Agentic Orchestration** | LangGraph state machine with 8 nodes, hierarchical classification, conditional routing, retry budgets, and hard conversation limits |
+| **Hierarchical Classification** | Two-stage intent pipeline: `customer_delegator` (domain) → `classifier` (intent), reducing misclassification before tool dispatch |
 | **Custom MCP Tool Server** | FastMCP 2.0 SSE server exposing 10 typed ecommerce tools with RBAC-enforced access |
-| **Dual-Layer Memory** | Redis (hot session storage, 2h TTL) + PostgreSQL (compressed cross-session summaries) |
+| **Persistent Checkpointing** | LangGraph `AsyncPostgresSaver` — full session history and state checkpoint recovery via PostgreSQL |
+| **Cross-Session Memory** | Every ~10 messages, session is compressed into a cumulative PostgreSQL summary and injected on the next session |
 | **Guardrails Pipeline** | Input/output safety checks: PII detection, prompt injection blocking, hallucination grounding — regex-first with LLM fallback |
 | **Multi-Modal API** | REST, Server-Sent Events (SSE), and WebSocket endpoints in a single FastAPI service |
 | **Production-Ready Auth** | JWT-based authentication with HS256, role-based access control (customer / support_agent / admin) |
-| **Persistent Checkpointing** | LangGraph + PostgreSQL-backed checkpoint pool for session recovery and state replay |
 | **Structured Observability** | `structlog` JSON logging + optional LangSmith tracing integration |
 
 ---
@@ -50,7 +51,7 @@ Expect frequent iteration on `app/agent/prompts/`, `app/guardrails/`, and `tools
 ## Architecture
 
 <p align="center">
-  <img src="assets/architecture.png" alt="ShopEasy Architecture Diagram" width="900"/>
+  <img src="assets/architecture_v1.png" alt="ShopEasy Architecture Diagram" width="900"/>
 </p>
 
 ---
@@ -59,19 +60,27 @@ Expect frequent iteration on `app/agent/prompts/`, `app/guardrails/`, and `tools
 
 ```
 User Message
-  └─► guardrails_in   ──  PII scan, injection detection, rate limit (20 msg/min/user)
-        └─► classifier     ──  Intent detection (13 classes), confidence threshold
-              ├─► [direct]   ──────────────────────────────────────────────┐
-              ├─► [tool]     → tool_planner → tool_executor (SSE → MCP)   │
-              │                     └─► [retry ≤ 2]  ──────────────────   │
-              └─► [complaint] → human_handoff                             │
-                                                                          ▼
-                                                               response_generator
-                                                                          │
-                                                               guardrails_out  ──  PII leak, grounding check
-                                                                     └─► [rewrite ≤ 2]
-                                                                          │
-                                                                    HTTP / SSE / WS
+  └─► guardrails_in      ──  PII redaction, injection detection (regex → Haiku fallback),
+  │                           rate limit (20 msg/min/user)
+  │
+  └─► customer_delegator ──  Hierarchical domain classification (gpt-4o-mini)
+  │      │                    need_information · need_assistance · need_advice
+  │      └─► [escalate / block] → human_handoff ──────────────────────────┐
+  │                                                                        │
+  └─► classifier         ──  13-class intent detection, confidence check  │
+         ├─► [direct]   ──────────────────────────────────────────────┐   │
+         ├─► [tool]     → tool_planner → tool_executor (SSE → MCP)   │   │
+         │                      └─► [retry ≤ 2]  ───────────────────  │   │
+         └─► [complaint] → human_handoff ──────────────────────────── │ ──┘
+                                                                       ▼
+                                                              memory (summarizer)
+                                                                       │
+                                                             response_generator
+                                                                       │
+                                                             guardrails_out  ──  PII leak, grounding check
+                                                                  └─► [rewrite ≤ 2]
+                                                                       │
+                                                               HTTP / SSE / WS
 ```
 
 ---
@@ -79,11 +88,12 @@ User Message
 ## Features
 
 ### Agentic Intelligence
+- **Hierarchical classification** — `customer_delegator` first assigns a broad domain (`need_information`, `need_assistance`, `need_advice`, `escalate`, `block`), then `classifier` resolves the precise intent within that domain — reducing misrouting before any tool is selected
 - **13-class intent classifier** — `order_status`, `order_cancel`, `shipment_tracking`, `refund_request`, `refund_status`, `product_inquiry`, `product_search`, `account_info`, `review_lookup`, `chitchat`, `faq_policy`, `complaint`, `unknown`
 - **Structured LLM outputs** — Pydantic-validated responses prevent hallucinated tool calls
 - **Retry budgets** — Up to 2 tool retries and 2 output rewrites per turn before fail-safe response
 - **Hard turn limit** — 5-turn ceiling prevents runaway loops
-- **Complaint escalation** — Automatic routing to human handoff for unresolved complaints
+- **Complaint escalation** — Automatic routing to human handoff at both the delegator and classifier layers
 
 ### Custom MCP Tool Server
 - **10 typed tools** — 8 read-only, 2 write (confirmation flag required)
@@ -97,8 +107,9 @@ User Message
 - **Cheap-first architecture** — Fast regex runs first; LLM fallback invoked only when pattern confidence is below threshold
 
 ### Memory System
-- **Short-term (Redis)** — Last 50 messages per session, 2-hour sliding TTL, session metadata
-- **Long-term (PostgreSQL)** — Every 5 turns, session is compressed into a summary and persisted; injected into the system prompt on subsequent sessions for cross-session context continuity
+- **Session state (LangGraph Checkpointer)** — `AsyncPostgresSaver` persists the full conversation state (all messages, tool results, guardrail flags) to PostgreSQL after every graph turn. On reconnect, the checkpoint is loaded automatically — no explicit session reconstruction needed
+- **Cross-session context (PostgreSQL)** — After every ~10 messages the in-graph summarizer compresses the current history into a cumulative `ConversationSummary`. On the next session the last 5 summaries are retrieved and injected into the system prompt, giving the LLM continuity across sessions without token bloat
+- **Redis** — Used exclusively for rate-limit sliding windows and MCP tool-result caching
 
 ### API Surface
 | Endpoint | Protocol | Description |
@@ -123,7 +134,7 @@ User Message
 | **LLM** | OpenAI `gpt-4o-mini` (classification + response generation) |
 | **Tool Protocol** | [FastMCP](https://github.com/jlowin/fastmcp) 2.0 over SSE |
 | **API Framework** | [FastAPI](https://fastapi.tiangolo.com/) + Uvicorn (ASGI) |
-| **Session Store** | Redis 7 (async, connection pool) |
+| **Cache / Rate Limit** | Redis 7 (async, connection pool — tool cache + rate limiting) |
 | **Persistent Store** | PostgreSQL 16 + SQLAlchemy 2.0 (async / psycopg3) |
 | **Checkpointing** | `langgraph-checkpoint-postgres` + psycopg connection pool |
 | **Authentication** | JWT HS256 (`python-jose`) |
@@ -147,7 +158,8 @@ User Message
 │   │   ├── graph.py              # StateGraph: nodes, edges, compilation
 │   │   ├── state.py              # AgentState TypedDict (21 fields)
 │   │   ├── edges.py              # 4 routing functions, retry budgets
-│   │   ├── nodes/                # 5 async node implementations
+│   │   ├── nodes/                # 8 async node implementations (+ 1 stub)
+│   │   │   ├── customer_delegator.py  # Hierarchical domain classifier (runs before classifier)
 │   │   │   ├── classifier.py
 │   │   │   ├── tool_planner.py
 │   │   │   ├── tool_executor.py
@@ -156,7 +168,7 @@ User Message
 │   ├── api/v1/                   # Endpoints: chat, auth, feedback, health
 │   ├── auth/                     # JWT service, middleware, RBAC
 │   ├── guardrails/               # input_guard, output_guard, PII patterns, rate limiter
-│   ├── memory/                   # short_term (Redis), long_term (PostgreSQL), summarizer
+│   ├── memory/                   # long_term (PostgreSQL), summarizer (LangGraph state)
 │   ├── mcp_client/               # SSE client factory, role-keyed tool registry
 │   ├── cache/                    # Redis utilities, cache-aside strategy
 │   └── db/                       # SQLAlchemy async engine + session factory
@@ -255,12 +267,13 @@ All configuration is managed by Pydantic Settings in `app/config.py` and read fr
 |---|---|---|
 | `ENVIRONMENT` | `development` | `production` disables reload, SQL echo, Swagger |
 | `MCP_TOOLS_URL` | `http://localhost:8001/sse` | `http://mcp-tools:8001/sse` in Docker |
-| `classifier_model` | `gpt-4o-mini` | Intent classification model |
+| `classifier_model` | `gpt-4o-mini` | Intent classification + delegator model |
 | `openai_model` | `gpt-4o-mini` | Response generation model |
 | `LANGCHAIN_TRACING_V2` | `false` | Set `true` + `LANGCHAIN_API_KEY` for LangSmith |
-| `RATE_LIMIT_MESSAGES_PER_MINUTE` | `20` | Per-user message rate limit |
+| `RATE_LIMIT_MESSAGES_PER_MINUTE` | `20` | Per-user message rate limit (Redis sliding window) |
 | `AGENT_MAX_TURNS` | `5` | Hard conversation turn ceiling |
-| `SESSION_TTL_SECONDS` | `7200` | Redis session TTL (2 hours) |
+| `CHECKPOINT_POOL_MIN_SIZE` | `1` | LangGraph PostgreSQL checkpointer min pool size |
+| `CHECKPOINT_POOL_MAX_SIZE` | `5` | LangGraph PostgreSQL checkpointer max pool size |
 
 Full variable reference: [`app/config.py`](app/config.py)
 
@@ -361,8 +374,8 @@ ws.onmessage = (event) => {
 - User identity (`X-User-Id`, `X-User-Role`) is injected by the framework, never sourced from LLM output
 
 ### Guardrails
-- **Rate limiting** — 20 messages per minute per user (Redis-backed sliding window)
-- **Input validation** — Hard blocks on SQL injection, template injection, jailbreak keywords; soft blocks (Haiku LLM fallback) for instruction-override attempts
+- **Rate limiting** — 20 messages per minute per user (Redis sliding window in `guardrails_in`)
+- **Input validation** — Hard blocks on SQL injection, template injection, jailbreak keywords; soft blocks (LLM fallback) for instruction-override attempts
 - **Output validation** — Blocks PII leakage (credit cards, SSNs, API keys), internal field exposure, and LLM hallucinations that contradict tool data
 - **Write operation limits** — Destructive: 1/turn · Write: 3/turn · Read: 10/turn
 
@@ -379,32 +392,36 @@ ws.onmessage = (event) => {
 ## Memory Architecture
 
 ```
-Session Start
+Every Turn (automatic)
      │
      ▼
-Redis ──────────────────────────────────── Hot Storage
-  • conv:{session_id}:messages             Last 50 messages (JSON)
-  • conv:{session_id}:meta                 intent, summary, updated_at
-  • TTL: 2 hours (sliding)
+LangGraph AsyncPostgresSaver ──────────── Live Session State
+  • Full AgentState saved to checkpoint     messages, tool results,
+    after every graph node                  guardrail flags, intent,
+  • Loaded at request start                 customer_domain, summaries
+  • Enables crash recovery and replay
      │
-     │  Every 5 turns
+     │  Every ~10 messages (in-graph)
      ▼
-Summarizer ────────────────────────────── Compression
-  • Token-aware summary of session
+Summarizer node ───────────────────────── Compression
+  • Cumulative summary merges prior +       stored in AgentState as
+    new messages into one coherent text     context_summary
+  • Persisted via checkpointer              (never removes raw messages)
      │
+     │  On session close / archival
      ▼
-PostgreSQL ─────────────────────────────── Cold Storage
-  • conversations                          Session header
-  • messages                               Full message log
-  • conversation_summaries                 Compressed context
+PostgreSQL (long-term tables) ──────────── Cross-Session Storage
+  • conversations                           Session header
+  • messages                                Full message log
+  • conversation_summaries                  Compressed context per session
      │
      │  On next session start
      ▼
 System Prompt Injection ───────────────── Context Continuity
-  • Last 5 summaries injected into LLM context
-  • Customer sees continuity across sessions
+  • Last 5 archived summaries injected      Customer sees continuity
+    into LLM context                        across sessions without
+                                            token bloat
 ```
-
 ---
 
 ## Cache Strategy
@@ -415,7 +432,6 @@ System Prompt Injection ───────────────── Cont
 | Product search | 15 minutes | Inventory fluctuates |
 | Order status | 5 minutes | Changes frequently |
 | Categories / Brands | 6 hours | Rarely changes |
-| Session (Redis) | 2 hours | Active conversation window |
 
 ---
 
@@ -450,7 +466,8 @@ LANGCHAIN_PROJECT=ecommerce-customer-service
 
 1. Add the string literal to `IntentType` in `app/agent/state.py`
 2. Classify it into `TOOL_INTENTS`, `DIRECT_RESPONSE_INTENTS`, or `ESCALATION_INTENTS`
-3. Add few-shot examples to `app/agent/prompts/classifier.py`
-4. Update the tool planner system prompt if the intent maps to a tool
+3. Decide which delegator domain it belongs to (`need_information`, `need_assistance`, `need_advice`) and update `app/agent/prompts/customer_delegator.py` if the mapping isn't covered
+4. Add few-shot examples to `app/agent/prompts/classifier.py`
+5. Update the tool planner system prompt if the intent maps to a tool
 
 ---
