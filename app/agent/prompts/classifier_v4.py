@@ -6,6 +6,7 @@ from app.agent.state import (
     ADVICE_INTENTS,
     ASSISTANCE_INTENTS,
     INFORMATION_INTENTS,
+    INTENT_REGISTRY,
     CustomerDomain,
     IntentType,
 )
@@ -67,8 +68,13 @@ The customer has already been categorised as: **{domain_label}**
 Your job: classify the customer's message into one of the following intents.
 Output a single JSON object. No explanation, no markdown fences.
 
-If a "## Recent conversation context" section is present, use it only to resolve
-references like "it", "that order", "the same one" in the latest message.
+If a "## Recent conversation context" section is present:
+1. Identify the specific topic the customer was discussing in the prior turn.
+2. Use that topic to resolve any pronouns or references ("it", "that", "the same one")
+   in the current message.
+3. Classify based on what aspect of that topic the customer is now asking about — a
+   follow-up asking about location, delivery progress, or dispatch is shipment_tracking
+   even when the prior turn established a general order context.
 
 ## Valid intents for this domain
 {intent_list}
@@ -87,6 +93,14 @@ _DOMAIN_LABELS: dict[str, str] = {
     "need_assistance": "needs assistance (action required)",
     "need_advice": "needs advice (guidance or general chat)",
 }
+
+
+def _format_intent(name: str) -> str:
+    defn = INTENT_REGISTRY.get(name)
+    if defn and defn.context_signals:
+        signals = "; ".join(defn.context_signals)
+        return f"- {name}: {signals}"
+    return f"- {name}"
 
 
 def build_domain_classifier_messages(
@@ -113,7 +127,7 @@ def build_domain_classifier_messages(
     examples = _DOMAIN_EXAMPLES[domain]
     domain_label = _DOMAIN_LABELS[domain]
 
-    intent_list = "\n".join(f"- {i}" for i in intents)
+    intent_list = "\n".join(_format_intent(i) for i in intents)
     system_content = _SYSTEM_TEMPLATE.format(
         domain_label=domain_label,
         intent_list=intent_list,
