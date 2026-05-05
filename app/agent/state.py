@@ -91,16 +91,16 @@ INTENT_REGISTRY: dict[str, IntentDefinition] = {
         name="order_status",
         type="information",
         context_signals=(
-            "user asks about the current status, progress, or timeline of a specific placed order",
-            "references a specific order by ID or by 'my order', 'my recent order'",
+            "user asks about the fulfilment lifecycle of a placed order: whether it has been confirmed, prepared, or dispatched — the order's processing state, not its physical location after dispatch",
+            "referencing an order ID alone does not determine this intent; the question must concern fulfilment or processing state rather than carrier progress, delivery location, or tracking information",
         ),
     ),
     "shipment_tracking": IntentDefinition(
         name="shipment_tracking",
         type="information",
         context_signals=(
-            "user asks for real-time location or transit progress of a package already in delivery",
-            "mentions 'tracking', 'package', 'shipment', 'in transit', 'arrive', 'delivery date'",
+            "user wants to know where a dispatched package physically is, when it will arrive, or what stage of carrier transit it is in — the package's movement after leaving the seller",
+            "includes requests about: tracking numbers, carrier updates, out-for-delivery status, estimated arrival date, current city or location of the package, and whether the warehouse has dispatched the item yet",
         ),
     ),
     "refund_status": IntentDefinition(
@@ -148,7 +148,7 @@ INTENT_REGISTRY: dict[str, IntentDefinition] = {
         type="assistance",
         context_signals=(
             "user explicitly requests cancellation of an existing order",
-            "phrases like 'cancel my order', 'cancel order #', 'I want to cancel'",
+            "when the customer asks to both cancel and get a refund in the same message, prefer order_cancel — cancellation is the primary action and the refund follows automatically from it",
         ),
     ),
     "refund_request": IntentDefinition(
@@ -163,8 +163,8 @@ INTENT_REGISTRY: dict[str, IntentDefinition] = {
         name="faq_policy",
         type="advice",
         context_signals=(
-            "user asks about store policy, general timelines, how-to guidance, or store capabilities",
-            "no specific personal order or account referenced; asks 'how do I', 'what is your policy', 'do you offer'",
+            "user asks about this store's own policies, general timelines, how-to guidance, or store capabilities — answerable from the store's static knowledge",
+            "no specific personal order or account referenced; questions about general consumer law, third-party regulations, or policies of other businesses are unknown, not faq_policy",
         ),
     ),
     "chitchat": IntentDefinition(
@@ -179,7 +179,8 @@ INTENT_REGISTRY: dict[str, IntentDefinition] = {
         name="unknown",
         type="advice",
         context_signals=(
-            "message is genuinely vague and no specific intent is discernible even with conversation history",
+            "request is completely outside the scope of this e-commerce service — the customer is asking about something the bot should decline rather than something it simply lacks data for: general world knowledge, entertainment, third-party services, off-topic tasks",
+            "also use for genuinely uninterpretable messages where no intent can be determined even with conversation history; distinct from chitchat: chitchat is social interaction the bot can engage with (greetings, thanks, small talk about the bot), unknown is a clear request the bot should politely decline",
         ),
     ),
 }

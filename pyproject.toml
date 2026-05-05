@@ -25,3 +25,9 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 include = ["app*", "tools_mcp*"]
+
+[dependency-groups]
+dev = [
+    "plotly>=6.7.0",
+    "streamlit>=1.57.0",
+]
