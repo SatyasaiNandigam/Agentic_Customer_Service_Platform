@@ -27,6 +27,7 @@ EVAL_TYPES = {
     "Intent Classifier":  "intent_classification",
     "Customer Delegator": "customer_delegator",
     "Tool Planner":       "tool_planner",
+    "Tool Executor":      "tool_executor",
 }
 
 
@@ -623,6 +624,207 @@ def _planner_status_banner(data: dict) -> None:
     st.markdown("")
 
 
+# ── tool executor charts ─────────────────────────────────────────────────────
+
+EXECUTOR_CATEGORIES = [
+    "success_read", "success_write", "limit_destructive",
+    "limit_write", "limit_total", "server_error", "no_tool", "tool_not_found",
+]
+EXECUTOR_CATEGORY_LABELS = {
+    "success_read":      "Success Read",
+    "success_write":     "Success Write",
+    "limit_destructive": "Limit Destructive",
+    "limit_write":       "Limit Write",
+    "limit_total":       "Limit Total",
+    "server_error":      "Server Error",
+    "no_tool":           "No Tool",
+    "tool_not_found":    "Tool Not Found",
+}
+EXECUTOR_THRESHOLD_LABELS = {
+    "limit_enforcement_rate":      "Limit Enforcement Rate",
+    "exception_capture_rate":      "Exception Capture Rate",
+    "tool_message_rate":           "Tool Message Rate",
+    "no_tool_guard_rate":          "No Tool Guard Rate",
+    "tool_call_id_linkage_rate":   "Tool Call ID Linkage",
+    "counts_increment_accuracy":   "Counts Increment Accuracy",
+    "success_read_rate":           "Success Read Rate",
+    "p95_latency_ms_success_read": "p95 Latency ms (Read)",
+}
+
+
+def chart_executor_thresholds(data: dict) -> go.Figure:
+    labels, values, targets, colors = [], [], [], []
+    for key, label in EXECUTOR_THRESHOLD_LABELS.items():
+        t = data["thresholds"][key]
+        labels.append(label)
+        values.append(t["value"])
+        targets.append(t["threshold"])
+        colors.append(_color(t["pass"]))
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=values, y=labels, orientation="h", marker_color=colors, name="Value",
+        text=[f"{v:.4f}" if isinstance(v, float) else str(v) for v in values],
+        textposition="outside",
+    ))
+    fig.add_trace(go.Scatter(
+        x=targets, y=labels, mode="markers",
+        marker=dict(symbol="line-ns", size=18, color="black", line=dict(width=3)),
+        name="Threshold",
+    ))
+    fig.update_layout(
+        title="Threshold Checks",
+        xaxis=dict(range=[0, max(max(values) * 1.3, 1.1)]),
+        height=380, margin=dict(l=220, r=120, t=40, b=20),
+        legend=dict(orientation="h", y=-0.12),
+    )
+    return fig
+
+
+def chart_executor_per_category(data: dict) -> go.Figure:
+    per = data["per_category"]
+    labels, evaluated, correct, skipped_vals = [], [], [], []
+    for c in EXECUTOR_CATEGORIES:
+        cat = per.get(c, {})
+        skip = cat.get("skipped", 0)
+        count = cat.get("count", 0)
+        ok = cat.get("success_correct", 0)
+        labels.append(EXECUTOR_CATEGORY_LABELS[c])
+        evaluated.append(count)
+        correct.append(ok)
+        skipped_vals.append(skip)
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        name="Correct", x=labels, y=correct,
+        marker_color=PASS_COLOR,
+        text=[str(v) if v > 0 else "" for v in correct], textposition="inside",
+    ))
+    fig.add_trace(go.Bar(
+        name="Failed", x=labels,
+        y=[e - c for e, c in zip(evaluated, correct)],
+        marker_color=FAIL_COLOR,
+        text=[str(e - c) if e - c > 0 else "" for e, c in zip(evaluated, correct)],
+        textposition="inside",
+    ))
+    fig.add_trace(go.Bar(
+        name="Skipped", x=labels, y=skipped_vals,
+        marker_color="#95a5a6",
+        text=[str(v) if v > 0 else "" for v in skipped_vals], textposition="inside",
+    ))
+    fig.update_layout(
+        title="Per-Category Results (correct / failed / skipped)",
+        barmode="stack", height=340, margin=dict(t=50, b=70),
+        xaxis=dict(tickangle=-30),
+        legend=dict(orientation="h", y=-0.3),
+    )
+    return fig
+
+
+def chart_executor_latency(data: dict) -> go.Figure:
+    perf = data["performance"]
+    read_lat = perf["success_read_latency_ms"]
+    all_lat = perf["all_latency_ms"]
+    metrics = ["p50", "p95", "mean", "max"]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        name=f"Success Read (n={read_lat['count']})",
+        x=metrics, y=[read_lat[m] for m in metrics],
+        marker_color="#3498db",
+        text=[f"{read_lat[m]:.0f}ms" for m in metrics],
+        textposition="outside",
+    ))
+    fig.add_trace(go.Bar(
+        name=f"All Calls (n={all_lat['count']})",
+        x=metrics, y=[all_lat[m] for m in metrics],
+        marker_color="#9b59b6",
+        text=[f"{all_lat[m]:.0f}ms" for m in metrics],
+        textposition="outside",
+    ))
+    fig.update_layout(
+        title="Latency: Success Read vs All Calls",
+        barmode="group", yaxis=dict(title="ms"),
+        height=320, margin=dict(t=50, b=20),
+        legend=dict(orientation="h", y=-0.18),
+    )
+    return fig
+
+
+def chart_executor_detail_rates(data: dict) -> go.Figure:
+    detail = data["detail"]
+    display = {
+        "limit_enforcement":    "Limit Enforcement",
+        "exception_capture":    "Exception Capture",
+        "tool_message":         "Tool Message",
+        "no_tool_guard":        "No Tool Guard",
+        "tool_call_id_linkage": "Tool Call ID Linkage",
+        "counts_accuracy":      "Counts Accuracy",
+        "success_read":         "Success Read",
+    }
+    labels, rates, passed_vals, totals, colors = [], [], [], [], []
+    for key, label in display.items():
+        d = detail[key]
+        labels.append(label)
+        rates.append(d["rate"])
+        passed_vals.append(d.get("passed") or d.get("captured") or 0)
+        totals.append(d["total"])
+        colors.append(_color(d["rate"] >= 1.0))
+
+    fig = go.Figure(go.Bar(
+        x=rates, y=labels, orientation="h",
+        marker_color=colors,
+        text=[f"{r:.1%}  ({p}/{t})" for r, p, t in zip(rates, passed_vals, totals)],
+        textposition="outside",
+    ))
+    fig.update_layout(
+        title="Detail Metric Rates",
+        xaxis=dict(range=[0, 1.35]),
+        height=320, margin=dict(l=190, r=120, t=40, b=20),
+    )
+    return fig
+
+
+def _executor_status_banner(data: dict) -> None:
+    summary = data["summary"]
+    passes = summary["passes_all_thresholds"]
+    label = "✅ ALL THRESHOLDS PASS" if passes else "❌ THRESHOLDS FAILING"
+    st.markdown(
+        f"<div style='padding:12px 20px;background:{_color(passes)};color:white;"
+        f"border-radius:6px;font-size:1.1rem;font-weight:600;'>"
+        f"{label} &nbsp;|&nbsp; Evaluated: {summary['evaluated']} &nbsp;|&nbsp; "
+        f"Skipped: {summary['skipped']} &nbsp;|&nbsp; Uncaught Errors: {summary['uncaught_errors']}"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown("")
+
+
+def render_tool_executor(data: dict) -> None:
+    meta = data["run_metadata"]
+    summary = data["summary"]
+
+    st.title("Tool Executor Node — Eval Dashboard")
+    cols = st.columns(5)
+    cols[0].metric("Date", meta["date"])
+    cols[1].metric("Total Cases", meta["total_cases"])
+    cols[2].metric("Evaluated", summary["evaluated"])
+    cols[3].metric("Skipped", summary["skipped"])
+    cols[4].metric("Duration", f"{meta['duration_seconds']}s")
+    _executor_status_banner(data)
+
+    c1, c2 = st.columns([1, 1.2])
+    with c1:
+        st.plotly_chart(chart_executor_thresholds(data), use_container_width=True)
+    with c2:
+        st.plotly_chart(chart_executor_per_category(data), use_container_width=True)
+
+    c3, c4 = st.columns([1, 1])
+    with c3:
+        st.plotly_chart(chart_executor_latency(data), use_container_width=True)
+    with c4:
+        st.plotly_chart(chart_executor_detail_rates(data), use_container_width=True)
+
+
 # ── page renderers ────────────────────────────────────────────────────────────
 
 def render_delegator(data: dict) -> None:
@@ -795,6 +997,8 @@ def main() -> None:
         render_delegator(data)
     elif eval_suffix == "tool_planner":
         render_tool_planner(data)
+    elif eval_suffix == "tool_executor":
+        render_tool_executor(data)
     else:
         render_classifier(data)
 

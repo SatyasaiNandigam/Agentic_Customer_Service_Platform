@@ -1,0 +1,183 @@
+{
+  "run_metadata": {
+    "date": "2026-05-06 13:33:07",
+    "dataset_path": "eval\\datasets\\tool_executor.jsonl",
+    "total_cases": 40,
+    "concurrency": 3,
+    "include_writes": false,
+    "duration_seconds": 11.2,
+    "note": "Runs against real MCP server \u2014 ensure MCP_TOOLS_URL is reachable and DB is seeded."
+  },
+  "summary": {
+    "total_cases": 40,
+    "skipped": 3,
+    "evaluated": 37,
+    "uncaught_errors": 0,
+    "passes_all_thresholds": true
+  },
+  "thresholds": {
+    "limit_enforcement_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "exception_capture_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "tool_message_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "no_tool_guard_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "tool_call_id_linkage_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "counts_increment_accuracy": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "success_read_rate": {
+      "value": 1.0,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "p95_latency_ms_success_read": {
+      "value": 1826.6,
+      "threshold": 3000.0,
+      "pass": true
+    }
+  },
+  "per_category": {
+    "success_read": {
+      "count": 9,
+      "skipped": 0,
+      "uncaught_errors": 0,
+      "tool_message_appended": 9,
+      "counts_correct": 9,
+      "success_correct": 9
+    },
+    "success_write": {
+      "count": 0,
+      "skipped": 3
+    },
+    "limit_destructive": {
+      "count": 3,
+      "skipped": 0,
+      "uncaught_errors": 0,
+      "tool_message_appended": 3,
+      "counts_correct": 3,
+      "success_correct": 3
+    },
+    "limit_write": {
+      "count": 3,
+      "skipped": 0,
+      "uncaught_errors": 0,
+      "tool_message_appended": 3,
+      "counts_correct": 3,
+      "success_correct": 3
+    },
+    "limit_total": {
+      "count": 4,
+      "skipped": 0,
+      "uncaught_errors": 0,
+      "tool_message_appended": 4,
+      "counts_correct": 4,
+      "success_correct": 4
+    },
+    "server_error": {
+      "count": 10,
+      "skipped": 0,
+      "uncaught_errors": 0,
+      "tool_message_appended": 10,
+      "counts_correct": 10,
+      "success_correct": 10
+    },
+    "no_tool": {
+      "count": 5,
+      "skipped": 0,
+      "uncaught_errors": 0,
+      "tool_message_appended": 0,
+      "counts_correct": 5,
+      "success_correct": 5
+    },
+    "tool_not_found": {
+      "count": 3,
+      "skipped": 0,
+      "uncaught_errors": 0,
+      "tool_message_appended": 3,
+      "counts_correct": 3,
+      "success_correct": 3
+    }
+  },
+  "performance": {
+    "success_read_latency_ms": {
+      "p50": 1628.1,
+      "p95": 1826.6,
+      "mean": 1615.6,
+      "max": 1826.7,
+      "count": 9
+    },
+    "all_latency_ms": {
+      "p50": 1258.9,
+      "p95": 1826.7,
+      "mean": 891.3,
+      "max": 1877.1,
+      "count": 37
+    }
+  },
+  "detail": {
+    "limit_enforcement": {
+      "rate": 1.0,
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    },
+    "exception_capture": {
+      "rate": 1.0,
+      "captured": 37,
+      "total": 37,
+      "uncaught_count": 0,
+      "failures": []
+    },
+    "tool_message": {
+      "rate": 1.0,
+      "passed": 32,
+      "total": 32,
+      "failures": []
+    },
+    "no_tool_guard": {
+      "rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "failures": []
+    },
+    "tool_call_id_linkage": {
+      "rate": 1.0,
+      "passed": 32,
+      "total": 32,
+      "failures": []
+    },
+    "counts_accuracy": {
+      "rate": 1.0,
+      "passed": 37,
+      "total": 37,
+      "failures": []
+    },
+    "success_read": {
+      "rate": 1.0,
+      "passed": 9,
+      "total": 9,
+      "failures": []
+    }
+  }
+}
