@@ -1,0 +1,329 @@
+{
+  "run_metadata": {
+    "date": "2026-05-06 11:39:25",
+    "dataset_path": "eval\\datasets\\tool_planner.jsonl",
+    "total_cases": 60,
+    "model": "gpt-4o-mini",
+    "concurrency": 5,
+    "duration_seconds": 18.5,
+    "errors": 0,
+    "note": "Runs against real MCP server \u2014 ensure MCP_TOOLS_URL is reachable before executing"
+  },
+  "summary": {
+    "total_cases": 60,
+    "errors": 0,
+    "tool_selection_accuracy": 0.7,
+    "args_coverage_rate": 1.0,
+    "p95_latency_ms": 3617.7,
+    "rbac_violations": 0,
+    "passes_all_thresholds": false
+  },
+  "thresholds": {
+    "tool_selection_accuracy": {
+      "value": 0.7,
+      "threshold": 0.95,
+      "pass": false
+    },
+    "args_coverage_rate": {
+      "value": 1.0,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "p95_latency_ms": {
+      "value": 3617.7,
+      "threshold": 1500.0,
+      "pass": false
+    },
+    "rbac_violations": {
+      "value": 0,
+      "threshold": 0,
+      "pass": true
+    }
+  },
+  "per_category": {
+    "intent_mapping": {
+      "accuracy": 0.7,
+      "count": 20,
+      "correct": 14,
+      "errors": 0
+    },
+    "no_tool": {
+      "accuracy": 1.0,
+      "count": 10,
+      "correct": 10,
+      "errors": 0
+    },
+    "retry": {
+      "accuracy": 0.7,
+      "count": 10,
+      "correct": 7,
+      "errors": 0
+    },
+    "implicit": {
+      "accuracy": 0.7,
+      "count": 10,
+      "correct": 7,
+      "errors": 0
+    },
+    "rbac": {
+      "accuracy": 0.4,
+      "count": 10,
+      "correct": 4,
+      "errors": 0
+    }
+  },
+  "rbac": {
+    "rate": 0.0,
+    "count": 0,
+    "total": 60,
+    "violations": []
+  },
+  "performance": {
+    "latency_ms": {
+      "p50": 1203.0,
+      "p95": 3617.7,
+      "mean": 1482.2,
+      "max": 3777.6
+    },
+    "tokens": {
+      "total_prompt": 88870,
+      "total_completion": 1747,
+      "avg_prompt_per_call": 1481.2,
+      "avg_completion_per_call": 29.1
+    }
+  },
+  "failures": [
+    {
+      "id": "tp_implicit_cancel_01",
+      "category": "implicit",
+      "intent": "order_cancel",
+      "user_role": "customer",
+      "expected_tool": "cancel_order",
+      "predicted_tool": null,
+      "tool_input": null,
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "order_id 1042 referenced as 'it' \u2014 implicit from AI prior turn"
+    },
+    {
+      "id": "tp_implicit_cancel_02",
+      "category": "implicit",
+      "intent": "order_cancel",
+      "user_role": "customer",
+      "expected_tool": "cancel_order",
+      "predicted_tool": null,
+      "tool_input": null,
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "order_id 2500 established by customer then confirmed by AI"
+    },
+    {
+      "id": "tp_implicit_cancel_03",
+      "category": "implicit",
+      "intent": "order_cancel",
+      "user_role": "customer",
+      "expected_tool": "cancel_order",
+      "predicted_tool": null,
+      "tool_input": null,
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "'that one' refers to order #3700 from AI's opening message"
+    },
+    {
+      "id": "tp_intent_order_cancel_01",
+      "category": "intent_mapping",
+      "intent": "order_cancel",
+      "user_role": "customer",
+      "expected_tool": "cancel_order",
+      "predicted_tool": "get_order_detail",
+      "tool_input": {
+        "order_id": 2055
+      },
+      "args_covered": 1.0,
+      "error": null,
+      "notes": null
+    },
+    {
+      "id": "tp_intent_order_cancel_02",
+      "category": "intent_mapping",
+      "intent": "order_cancel",
+      "user_role": "customer",
+      "expected_tool": "cancel_order",
+      "predicted_tool": "get_order_detail",
+      "tool_input": {
+        "order_id": 3001
+      },
+      "args_covered": 1.0,
+      "error": null,
+      "notes": null
+    },
+    {
+      "id": "tp_intent_shipment_tracking_01",
+      "category": "intent_mapping",
+      "intent": "shipment_tracking",
+      "user_role": "customer",
+      "expected_tool": "track_shipment",
+      "predicted_tool": "get_order_detail",
+      "tool_input": {
+        "order_id": 1042
+      },
+      "args_covered": 1.0,
+      "error": null,
+      "notes": null
+    },
+    {
+      "id": "tp_intent_refund_request_01",
+      "category": "intent_mapping",
+      "intent": "refund_request",
+      "user_role": "customer",
+      "expected_tool": "initiate_refund",
+      "predicted_tool": "get_order_detail",
+      "tool_input": {
+        "order_id": 1001
+      },
+      "args_covered": 0.5,
+      "error": null,
+      "notes": null
+    },
+    {
+      "id": "tp_intent_refund_request_02",
+      "category": "intent_mapping",
+      "intent": "refund_request",
+      "user_role": "customer",
+      "expected_tool": "initiate_refund",
+      "predicted_tool": "get_order_detail",
+      "tool_input": {
+        "order_id": 1050
+      },
+      "args_covered": 0.5,
+      "error": null,
+      "notes": null
+    },
+    {
+      "id": "tp_intent_product_inquiry_02",
+      "category": "intent_mapping",
+      "intent": "product_inquiry",
+      "user_role": "customer",
+      "expected_tool": "get_product_detail",
+      "predicted_tool": "search_products",
+      "tool_input": {
+        "keyword": "TechPro X200"
+      },
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "product name only, no ID \u2014 planner should use product_name arg"
+    },
+    {
+      "id": "tp_rbac_01",
+      "category": "rbac",
+      "intent": "order_cancel",
+      "user_role": "customer",
+      "expected_tool": "cancel_order",
+      "predicted_tool": null,
+      "tool_input": null,
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "force_cancel_order is admin-only; planner must use customer cancel_order instead"
+    },
+    {
+      "id": "tp_rbac_02",
+      "category": "rbac",
+      "intent": "refund_request",
+      "user_role": "customer",
+      "expected_tool": "initiate_refund",
+      "predicted_tool": null,
+      "tool_input": null,
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "force_initiate_refund is admin-only; planner must fall back to initiate_refund"
+    },
+    {
+      "id": "tp_rbac_05",
+      "category": "rbac",
+      "intent": "refund_status",
+      "user_role": "customer",
+      "expected_tool": null,
+      "predicted_tool": "get_refund_status",
+      "tool_input": {},
+      "args_covered": 1.0,
+      "error": null,
+      "notes": "get_refund_status_any_user is support-only; customer cannot look up another account's refunds"
+    },
+    {
+      "id": "tp_rbac_06",
+      "category": "rbac",
+      "intent": "shipment_tracking",
+      "user_role": "customer",
+      "expected_tool": null,
+      "predicted_tool": "track_shipment",
+      "tool_input": {
+        "order_id": 7777
+      },
+      "args_covered": 1.0,
+      "error": null,
+      "notes": "track_shipment_any_user is support-only; customer cannot track another user's order by user_id"
+    },
+    {
+      "id": "tp_rbac_07",
+      "category": "rbac",
+      "intent": "order_cancel",
+      "user_role": "customer",
+      "expected_tool": "cancel_order",
+      "predicted_tool": null,
+      "tool_input": null,
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "force_cancel_order not available for customer; planner should use cancel_order as best available alternative"
+    },
+    {
+      "id": "tp_rbac_09",
+      "category": "rbac",
+      "intent": "refund_request",
+      "user_role": "customer",
+      "expected_tool": "initiate_refund",
+      "predicted_tool": null,
+      "tool_input": null,
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "force_initiate_refund not available; planner should use initiate_refund with the details provided"
+    },
+    {
+      "id": "tp_retry_cancel_01",
+      "category": "retry",
+      "intent": "order_cancel",
+      "user_role": "customer",
+      "expected_tool": "cancel_order",
+      "predicted_tool": "get_orders",
+      "tool_input": {},
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "wrong type for order_id \u2014 retry should fix to int 1042"
+    },
+    {
+      "id": "tp_retry_refund_01",
+      "category": "retry",
+      "intent": "refund_request",
+      "user_role": "customer",
+      "expected_tool": "initiate_refund",
+      "predicted_tool": null,
+      "tool_input": null,
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "missing reason \u2014 retry should include reason extracted from customer message"
+    },
+    {
+      "id": "tp_retry_refund_02",
+      "category": "retry",
+      "intent": "refund_request",
+      "user_role": "customer",
+      "expected_tool": "initiate_refund",
+      "predicted_tool": "get_order_detail",
+      "tool_input": {
+        "order_id": 1800
+      },
+      "args_covered": 0.5,
+      "error": null,
+      "notes": "missing order_id \u2014 retry should include 1800 from the message"
+    }
+  ]
+}

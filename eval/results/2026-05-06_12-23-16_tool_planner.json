@@ -1,0 +1,96 @@
+{
+  "run_metadata": {
+    "date": "2026-05-06 12:23:16",
+    "dataset_path": "eval\\datasets\\tool_planner.jsonl",
+    "total_cases": 60,
+    "model": "gpt-4o-mini",
+    "concurrency": 5,
+    "duration_seconds": 11.1,
+    "errors": 0,
+    "note": "Runs against real MCP server \u2014 ensure MCP_TOOLS_URL is reachable before executing"
+  },
+  "summary": {
+    "total_cases": 60,
+    "errors": 0,
+    "tool_selection_accuracy": 1.0,
+    "args_coverage_rate": 1.0,
+    "p95_latency_ms": 1382.4,
+    "rbac_violations": 0,
+    "passes_all_thresholds": true
+  },
+  "thresholds": {
+    "tool_selection_accuracy": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "args_coverage_rate": {
+      "value": 1.0,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "p95_latency_ms": {
+      "value": 1382.4,
+      "threshold": 1500.0,
+      "pass": true
+    },
+    "rbac_violations": {
+      "value": 0,
+      "threshold": 0,
+      "pass": true
+    }
+  },
+  "per_category": {
+    "intent_mapping": {
+      "accuracy": 1.0,
+      "count": 20,
+      "correct": 20,
+      "errors": 0
+    },
+    "no_tool": {
+      "accuracy": 1.0,
+      "count": 10,
+      "correct": 10,
+      "errors": 0
+    },
+    "retry": {
+      "accuracy": 1.0,
+      "count": 10,
+      "correct": 10,
+      "errors": 0
+    },
+    "implicit": {
+      "accuracy": 1.0,
+      "count": 10,
+      "correct": 10,
+      "errors": 0
+    },
+    "rbac": {
+      "accuracy": 1.0,
+      "count": 10,
+      "correct": 10,
+      "errors": 0
+    }
+  },
+  "rbac": {
+    "rate": 0.0,
+    "count": 0,
+    "total": 60,
+    "violations": []
+  },
+  "performance": {
+    "latency_ms": {
+      "p50": 962.2,
+      "p95": 1382.4,
+      "mean": 878.3,
+      "max": 1833.9
+    },
+    "tokens": {
+      "total_prompt": 24396,
+      "total_completion": 948,
+      "avg_prompt_per_call": 406.6,
+      "avg_completion_per_call": 15.8
+    }
+  },
+  "failures": []
+}

@@ -89,13 +89,13 @@ async def run_single(
     semaphore: asyncio.Semaphore,
 ) -> ClassifierResult:
     state = _build_state(record)
-    t0 = time.perf_counter()
     error: str | None = None
 
     prompt_tokens = 0
     completion_tokens = 0
 
     async with semaphore:
+        t0 = time.perf_counter()
         try:
             with capture_tokens() as cb:
                 output = await node(state)
@@ -109,8 +109,7 @@ async def run_single(
                 "needs_escalation": False,
             }
             error = str(exc)
-
-    latency_ms = (time.perf_counter() - t0) * 1000
+        latency_ms = (time.perf_counter() - t0) * 1000
     predicted = output.get("intent", _DOMAIN_FALLBACK_INTENT.get(record.customer_domain, "unknown"))
     confidence = output.get("confidence", 0.0)
 

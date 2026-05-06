@@ -1,0 +1,467 @@
+{
+  "run_metadata": {
+    "date": "2026-05-05 16:09:01",
+    "dataset_path": "eval\\datasets\\intent_classification.jsonl",
+    "total_cases": 218,
+    "model": "gpt-4o-mini",
+    "confidence_threshold": 0.5,
+    "concurrency": 10,
+    "duration_seconds": 23.3,
+    "errors": 0
+  },
+  "summary": {
+    "overall_accuracy": 0.9541,
+    "macro_f1": 0.9558,
+    "macro_f1_threshold": 0.9,
+    "passes_all_thresholds": true
+  },
+  "thresholds": {
+    "macro_f1": {
+      "value": 0.9558,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "need_information_f1": {
+      "value": 0.9472,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "need_assistance_f1": {
+      "value": 0.9756,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "need_advice_f1": {
+      "value": 0.9629,
+      "threshold": 0.85,
+      "pass": true
+    },
+    "false_rejection_rate": {
+      "value": 0.0311,
+      "threshold": 0.05,
+      "pass": true
+    },
+    "requires_tool_accuracy": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    }
+  },
+  "per_intent": {
+    "order_status": {
+      "tp": 16,
+      "fp": 2,
+      "fn": 3,
+      "support": 19,
+      "precision": 0.8889,
+      "recall": 0.8421,
+      "f1": 0.8649
+    },
+    "shipment_tracking": {
+      "tp": 20,
+      "fp": 3,
+      "fn": 1,
+      "support": 21,
+      "precision": 0.8696,
+      "recall": 0.9524,
+      "f1": 0.9091
+    },
+    "refund_status": {
+      "tp": 17,
+      "fp": 0,
+      "fn": 3,
+      "support": 20,
+      "precision": 1.0,
+      "recall": 0.85,
+      "f1": 0.9189
+    },
+    "account_info": {
+      "tp": 15,
+      "fp": 2,
+      "fn": 0,
+      "support": 15,
+      "precision": 0.8824,
+      "recall": 1.0,
+      "f1": 0.9375
+    },
+    "review_lookup": {
+      "tp": 14,
+      "fp": 0,
+      "fn": 0,
+      "support": 14,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "product_inquiry": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 0,
+      "support": 18,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "product_search": {
+      "tp": 16,
+      "fp": 0,
+      "fn": 0,
+      "support": 16,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "order_cancel": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 1,
+      "support": 21,
+      "precision": 1.0,
+      "recall": 0.9524,
+      "f1": 0.9756
+    },
+    "refund_request": {
+      "tp": 20,
+      "fp": 1,
+      "fn": 0,
+      "support": 20,
+      "precision": 0.9524,
+      "recall": 1.0,
+      "f1": 0.9756
+    },
+    "faq_policy": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 0,
+      "support": 18,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "chitchat": {
+      "tp": 16,
+      "fp": 0,
+      "fn": 2,
+      "support": 18,
+      "precision": 1.0,
+      "recall": 0.8889,
+      "f1": 0.9412
+    },
+    "unknown": {
+      "tp": 18,
+      "fp": 2,
+      "fn": 0,
+      "support": 18,
+      "precision": 0.9,
+      "recall": 1.0,
+      "f1": 0.9474
+    }
+  },
+  "domain_breakdown": {
+    "need_information": {
+      "macro_f1": 0.9472,
+      "accuracy": 0.9431,
+      "count": 123,
+      "threshold": 0.9,
+      "passes_threshold": true,
+      "per_intent": {
+        "order_status": {
+          "f1": 0.8649,
+          "support": 19
+        },
+        "shipment_tracking": {
+          "f1": 0.9091,
+          "support": 21
+        },
+        "refund_status": {
+          "f1": 0.9189,
+          "support": 20
+        },
+        "account_info": {
+          "f1": 0.9375,
+          "support": 15
+        },
+        "review_lookup": {
+          "f1": 1.0,
+          "support": 14
+        },
+        "product_inquiry": {
+          "f1": 1.0,
+          "support": 18
+        },
+        "product_search": {
+          "f1": 1.0,
+          "support": 16
+        }
+      }
+    },
+    "need_assistance": {
+      "macro_f1": 0.9756,
+      "accuracy": 0.9756,
+      "count": 41,
+      "threshold": 0.95,
+      "passes_threshold": true,
+      "per_intent": {
+        "order_cancel": {
+          "f1": 0.9756,
+          "support": 21
+        },
+        "refund_request": {
+          "f1": 0.9756,
+          "support": 20
+        }
+      }
+    },
+    "need_advice": {
+      "macro_f1": 0.9629,
+      "accuracy": 0.963,
+      "count": 54,
+      "threshold": 0.85,
+      "passes_threshold": true,
+      "per_intent": {
+        "faq_policy": {
+          "f1": 1.0,
+          "support": 18
+        },
+        "chitchat": {
+          "f1": 0.9412,
+          "support": 18
+        },
+        "unknown": {
+          "f1": 0.9474,
+          "support": 18
+        }
+      }
+    }
+  },
+  "false_rejection": {
+    "false_rejection_rate": 0.0311,
+    "false_rejection_count": 5,
+    "total_eligible": 161,
+    "threshold": 0.05,
+    "passes_threshold": true
+  },
+  "fallback_rate": {
+    "fallback_rate": 0.0,
+    "fallback_count": 0,
+    "total": 218,
+    "threshold": 0.02,
+    "passes_threshold": true
+  },
+  "requires_tool": {
+    "accuracy": 1.0,
+    "correct": 218,
+    "total": 218,
+    "passes_threshold": true
+  },
+  "confidence_calibration": [
+    {
+      "bin_lower": 0.0,
+      "bin_upper": 0.2,
+      "count": 0,
+      "mean_confidence": null,
+      "accuracy": null,
+      "calibration_gap": null
+    },
+    {
+      "bin_lower": 0.2,
+      "bin_upper": 0.4,
+      "count": 0,
+      "mean_confidence": null,
+      "accuracy": null,
+      "calibration_gap": null
+    },
+    {
+      "bin_lower": 0.4,
+      "bin_upper": 0.6,
+      "count": 2,
+      "mean_confidence": 0.4,
+      "accuracy": 0.5,
+      "calibration_gap": 0.1
+    },
+    {
+      "bin_lower": 0.6,
+      "bin_upper": 0.8,
+      "count": 1,
+      "mean_confidence": 0.6,
+      "accuracy": 1.0,
+      "calibration_gap": 0.4
+    },
+    {
+      "bin_lower": 0.8,
+      "bin_upper": 1.0,
+      "count": 215,
+      "mean_confidence": 0.9194,
+      "accuracy": 0.9581,
+      "calibration_gap": 0.0387
+    }
+  ],
+  "history_accuracy": {
+    "with_history": {
+      "accuracy": 0.8571,
+      "count": 14
+    },
+    "without_history": {
+      "accuracy": 0.9608,
+      "count": 204
+    }
+  },
+  "boundary_pair_accuracy": {
+    "chitchat|unknown": {
+      "accuracy": 0.5,
+      "count": 4,
+      "errors": 2
+    },
+    "faq_policy|unknown": {
+      "accuracy": 1.0,
+      "count": 4,
+      "errors": 0
+    },
+    "order_cancel|refund_request": {
+      "accuracy": 1.0,
+      "count": 8,
+      "errors": 0
+    },
+    "order_status|refund_status": {
+      "accuracy": 0.6667,
+      "count": 6,
+      "errors": 2
+    },
+    "order_status|shipment_tracking": {
+      "accuracy": 0.7143,
+      "count": 7,
+      "errors": 2
+    },
+    "product_inquiry|product_search": {
+      "accuracy": 1.0,
+      "count": 6,
+      "errors": 0
+    }
+  },
+  "performance": {
+    "latency_ms": {
+      "p50": 892.0,
+      "p95": 1677.3,
+      "mean": 985.1,
+      "max": 5053.2
+    },
+    "tokens": {
+      "total_prompt": 220372,
+      "total_completion": 2628,
+      "avg_prompt_per_call": 1010.9,
+      "avg_completion_per_call": 12.1
+    }
+  },
+  "failures": [
+    {
+      "id": "chitchat_vs_unknown_002",
+      "text": "Are you smarter than ChatGPT?",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.8,
+      "had_history": false,
+      "boundary_pair": "chitchat|unknown",
+      "error": null
+    },
+    {
+      "id": "chitchat_vs_unknown_004",
+      "text": "What is your favorite food?",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.8,
+      "had_history": false,
+      "boundary_pair": "chitchat|unknown",
+      "error": null
+    },
+    {
+      "id": "order_cancel_010",
+      "text": "Can I still cancel if it's already processing?",
+      "customer_domain": "need_assistance",
+      "expected_intent": "order_cancel",
+      "predicted_intent": "refund_request",
+      "confidence": 0.4,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "order_status_003",
+      "text": "Show me all my recent orders.",
+      "customer_domain": "need_information",
+      "expected_intent": "order_status",
+      "predicted_intent": "account_info",
+      "confidence": 0.88,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "order_status_vs_shipment_001",
+      "text": "Where is my order?",
+      "customer_domain": "need_information",
+      "expected_intent": "order_status",
+      "predicted_intent": "shipment_tracking",
+      "confidence": 0.93,
+      "had_history": false,
+      "boundary_pair": "order_status|shipment_tracking",
+      "error": null
+    },
+    {
+      "id": "order_status_vs_shipment_002",
+      "text": "Is my order on its way?",
+      "customer_domain": "need_information",
+      "expected_intent": "order_status",
+      "predicted_intent": "shipment_tracking",
+      "confidence": 0.93,
+      "had_history": false,
+      "boundary_pair": "order_status|shipment_tracking",
+      "error": null
+    },
+    {
+      "id": "order_status_vs_refund_003",
+      "text": "Is there any credit on my account from a recent return?",
+      "customer_domain": "need_information",
+      "expected_intent": "refund_status",
+      "predicted_intent": "account_info",
+      "confidence": 0.85,
+      "had_history": false,
+      "boundary_pair": "order_status|refund_status",
+      "error": null
+    },
+    {
+      "id": "order_status_vs_refund_004",
+      "text": "What's happening with order #4490 and the refund I requested?",
+      "customer_domain": "need_information",
+      "expected_intent": "refund_status",
+      "predicted_intent": "order_status",
+      "confidence": 0.85,
+      "had_history": false,
+      "boundary_pair": "order_status|refund_status",
+      "error": null
+    },
+    {
+      "id": "refund_status_hist_001",
+      "text": "Still no movement on that?",
+      "customer_domain": "need_information",
+      "expected_intent": "refund_status",
+      "predicted_intent": "shipment_tracking",
+      "confidence": 0.85,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "order_status_hist_003",
+      "text": "Has it shipped yet?",
+      "customer_domain": "need_information",
+      "expected_intent": "shipment_tracking",
+      "predicted_intent": "order_status",
+      "confidence": 0.93,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": null
+    }
+  ]
+}

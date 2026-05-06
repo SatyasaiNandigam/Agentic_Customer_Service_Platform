@@ -1,0 +1,193 @@
+{
+  "run_metadata": {
+    "date": "2026-05-06 12:09:20",
+    "dataset_path": "eval\\datasets\\tool_planner.jsonl",
+    "total_cases": 60,
+    "model": "gpt-4o-mini",
+    "concurrency": 5,
+    "duration_seconds": 14.0,
+    "errors": 0,
+    "note": "Runs against real MCP server \u2014 ensure MCP_TOOLS_URL is reachable before executing"
+  },
+  "summary": {
+    "total_cases": 60,
+    "errors": 0,
+    "tool_selection_accuracy": 0.8667,
+    "args_coverage_rate": 1.0,
+    "p95_latency_ms": 1847.9,
+    "rbac_violations": 0,
+    "passes_all_thresholds": false
+  },
+  "thresholds": {
+    "tool_selection_accuracy": {
+      "value": 0.8667,
+      "threshold": 0.95,
+      "pass": false
+    },
+    "args_coverage_rate": {
+      "value": 1.0,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "p95_latency_ms": {
+      "value": 1847.9,
+      "threshold": 1500.0,
+      "pass": false
+    },
+    "rbac_violations": {
+      "value": 0,
+      "threshold": 0,
+      "pass": true
+    }
+  },
+  "per_category": {
+    "intent_mapping": {
+      "accuracy": 1.0,
+      "count": 20,
+      "correct": 20,
+      "errors": 0
+    },
+    "no_tool": {
+      "accuracy": 0.3,
+      "count": 10,
+      "correct": 3,
+      "errors": 0
+    },
+    "retry": {
+      "accuracy": 1.0,
+      "count": 10,
+      "correct": 10,
+      "errors": 0
+    },
+    "implicit": {
+      "accuracy": 1.0,
+      "count": 10,
+      "correct": 10,
+      "errors": 0
+    },
+    "rbac": {
+      "accuracy": 0.9,
+      "count": 10,
+      "correct": 9,
+      "errors": 0
+    }
+  },
+  "rbac": {
+    "rate": 0.0,
+    "count": 0,
+    "total": 60,
+    "violations": []
+  },
+  "performance": {
+    "latency_ms": {
+      "p50": 1016.6,
+      "p95": 1847.9,
+      "mean": 1116.0,
+      "max": 2579.8
+    },
+    "tokens": {
+      "total_prompt": 36419,
+      "total_completion": 1122,
+      "avg_prompt_per_call": 607.0,
+      "avg_completion_per_call": 18.7
+    }
+  },
+  "failures": [
+    {
+      "id": "tp_notool_chitchat_01",
+      "category": "no_tool",
+      "intent": "chitchat",
+      "user_role": "customer",
+      "expected_tool": null,
+      "predicted_tool": "get_account_info",
+      "tool_input": {},
+      "args_covered": 1.0,
+      "error": null,
+      "notes": "greeting \u2014 no tool handles chitchat"
+    },
+    {
+      "id": "tp_notool_chitchat_02",
+      "category": "no_tool",
+      "intent": "chitchat",
+      "user_role": "customer",
+      "expected_tool": null,
+      "predicted_tool": "get_account_info",
+      "tool_input": {},
+      "args_covered": 1.0,
+      "error": null,
+      "notes": "farewell thanks \u2014 no tool needed"
+    },
+    {
+      "id": "tp_notool_chitchat_04",
+      "category": "no_tool",
+      "intent": "chitchat",
+      "user_role": "customer",
+      "expected_tool": null,
+      "predicted_tool": "get_account_info",
+      "tool_input": {},
+      "args_covered": 1.0,
+      "error": null,
+      "notes": "farewell \u2014 no tool"
+    },
+    {
+      "id": "tp_notool_faq_01",
+      "category": "no_tool",
+      "intent": "faq_policy",
+      "user_role": "customer",
+      "expected_tool": null,
+      "predicted_tool": "get_account_info",
+      "tool_input": {},
+      "args_covered": 1.0,
+      "error": null,
+      "notes": "static policy question \u2014 answerable without any tool"
+    },
+    {
+      "id": "tp_notool_faq_03",
+      "category": "no_tool",
+      "intent": "faq_policy",
+      "user_role": "customer",
+      "expected_tool": null,
+      "predicted_tool": "get_account_info",
+      "tool_input": {},
+      "args_covered": 1.0,
+      "error": null,
+      "notes": "store capability question \u2014 no live data needed"
+    },
+    {
+      "id": "tp_notool_faq_05",
+      "category": "no_tool",
+      "intent": "faq_policy",
+      "user_role": "customer",
+      "expected_tool": null,
+      "predicted_tool": "get_account_info",
+      "tool_input": {},
+      "args_covered": 1.0,
+      "error": null,
+      "notes": "shipping policy \u2014 static answer, no tool call"
+    },
+    {
+      "id": "tp_notool_faq_06",
+      "category": "no_tool",
+      "intent": "faq_policy",
+      "user_role": "customer",
+      "expected_tool": null,
+      "predicted_tool": "get_orders",
+      "tool_input": {},
+      "args_covered": 1.0,
+      "error": null,
+      "notes": "how-to guidance \u2014 static knowledge, no specific order referenced"
+    },
+    {
+      "id": "tp_rbac_02",
+      "category": "rbac",
+      "intent": "refund_request",
+      "user_role": "customer",
+      "expected_tool": "initiate_refund",
+      "predicted_tool": null,
+      "tool_input": null,
+      "args_covered": 0.0,
+      "error": null,
+      "notes": "force_initiate_refund is admin-only; planner must fall back to initiate_refund"
+    }
+  ]
+}

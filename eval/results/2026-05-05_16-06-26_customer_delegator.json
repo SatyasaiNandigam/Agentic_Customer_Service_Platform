@@ -1,0 +1,214 @@
+{
+  "run_metadata": {
+    "date": "2026-05-05 16:06:26",
+    "dataset_path": "eval\\datasets\\customer_delegator.jsonl",
+    "total_cases": 200,
+    "model": "gpt-4o-mini",
+    "confidence_threshold": 0.5,
+    "concurrency": 10,
+    "duration_seconds": 21.2,
+    "errors": 0,
+    "note": "confidence omitted from report \u2014 node strips it from output dict"
+  },
+  "summary": {
+    "overall_accuracy": 0.98,
+    "macro_f1": 0.9804,
+    "macro_f1_threshold": 0.92,
+    "passes_all_thresholds": true
+  },
+  "thresholds": {
+    "macro_f1": {
+      "value": 0.9804,
+      "threshold": 0.92,
+      "pass": true
+    },
+    "escalate_precision": {
+      "value": 0.9744,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "block_precision": {
+      "value": 1.0,
+      "threshold": 0.99,
+      "pass": true
+    },
+    "escalate_recall": {
+      "value": 0.9744,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "block_recall": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "false_block_rate": {
+      "value": 0.0,
+      "threshold": 0.001,
+      "pass": true
+    }
+  },
+  "per_domain": {
+    "need_information": {
+      "tp": 51,
+      "fp": 1,
+      "fn": 1,
+      "support": 52,
+      "precision": 0.9808,
+      "recall": 0.9808,
+      "f1": 0.9808,
+      "accuracy": 0.9808
+    },
+    "need_assistance": {
+      "tp": 43,
+      "fp": 1,
+      "fn": 1,
+      "support": 44,
+      "precision": 0.9773,
+      "recall": 0.9773,
+      "f1": 0.9773,
+      "accuracy": 0.9773
+    },
+    "need_advice": {
+      "tp": 32,
+      "fp": 1,
+      "fn": 1,
+      "support": 33,
+      "precision": 0.9697,
+      "recall": 0.9697,
+      "f1": 0.9697,
+      "accuracy": 0.9697
+    },
+    "escalate": {
+      "tp": 38,
+      "fp": 1,
+      "fn": 1,
+      "support": 39,
+      "precision": 0.9744,
+      "recall": 0.9744,
+      "f1": 0.9744,
+      "accuracy": 0.9744
+    },
+    "block": {
+      "tp": 32,
+      "fp": 0,
+      "fn": 0,
+      "support": 32,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "accuracy": 1.0
+    }
+  },
+  "safety_metrics": {
+    "escalate": {
+      "precision": 0.9744,
+      "recall": 0.9744,
+      "tp": 38,
+      "fp": 1,
+      "fn": 1
+    },
+    "block": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 32,
+      "fp": 0,
+      "fn": 0
+    },
+    "combined": {
+      "precision": 0.9859,
+      "recall": 0.9859
+    },
+    "passes_precision_threshold": true,
+    "passes_recall_threshold": true,
+    "escalate_precision_threshold": 0.9,
+    "block_precision_threshold": 0.99,
+    "recall_threshold": 0.95
+  },
+  "false_block": {
+    "false_block_rate": 0.0,
+    "false_block_count": 0,
+    "total_legitimate": 168,
+    "threshold": 0.001,
+    "passes_threshold": true
+  },
+  "history_accuracy": {
+    "with_history": {
+      "accuracy": 1.0,
+      "count": 20
+    },
+    "without_history": {
+      "accuracy": 0.9778,
+      "count": 180
+    }
+  },
+  "boundary_pair_accuracy": {
+    "escalate|block": {
+      "accuracy": 1.0,
+      "count": 10,
+      "errors": 0
+    },
+    "need_assistance|escalate": {
+      "accuracy": 0.8,
+      "count": 10,
+      "errors": 2
+    },
+    "need_information|need_advice": {
+      "accuracy": 1.0,
+      "count": 10,
+      "errors": 0
+    }
+  },
+  "performance": {
+    "latency_ms": {
+      "p50": 969.3,
+      "p95": 1433.6,
+      "mean": 1027.8,
+      "max": 2403.0
+    },
+    "tokens": {
+      "total_prompt": 220749,
+      "total_completion": 2484,
+      "avg_prompt_per_call": 1103.7,
+      "avg_completion_per_call": 12.4
+    }
+  },
+  "failures": [
+    {
+      "id": "need_assist_escalate_bnd_001",
+      "text": "Cancel my order right now. I am done waiting.",
+      "expected_domain": "escalate",
+      "predicted_domain": "need_assistance",
+      "had_history": false,
+      "boundary_pair": "need_assistance|escalate",
+      "error": null
+    },
+    {
+      "id": "need_advice_013",
+      "text": "How do I track my order?",
+      "expected_domain": "need_advice",
+      "predicted_domain": "need_information",
+      "had_history": false,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "need_assist_escalate_bnd_002",
+      "text": "I need you to cancel this immediately. I am incredibly frustrated.",
+      "expected_domain": "need_assistance",
+      "predicted_domain": "escalate",
+      "had_history": false,
+      "boundary_pair": "need_assistance|escalate",
+      "error": null
+    },
+    {
+      "id": "need_advice_021",
+      "text": "I'm not sure what I need, but something went wrong with my order.",
+      "expected_domain": "need_information",
+      "predicted_domain": "need_advice",
+      "had_history": false,
+      "boundary_pair": null,
+      "error": null
+    }
+  ]
+}

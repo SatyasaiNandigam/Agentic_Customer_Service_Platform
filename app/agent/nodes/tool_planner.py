@@ -6,20 +6,20 @@ from langchain_core.messages import AIMessage, BaseMessage, SystemMessage
 from langchain_core.tools import BaseTool
 from pydantic import ValidationError
 
-from app.agent.prompts import build_system_prompt
+from app.agent.prompts import build_tool_planner_prompt
 from app.agent.state import AgentState
+from app.agent.tool_scope import NO_TOOL_INTENTS, scope_tools_for_intent
 from app.mcp_client.tool_registry import get_registry_tools
 
 logger = structlog.get_logger(__name__)
 
 
 def _build_messages(state: AgentState) -> list[BaseMessage]:
-    """Prepend the system prompt to the unsummarized conversation window.
+    """Prepend the tool-planner system prompt to the conversation window.
 
-    The system prompt is rebuilt on every invocation so that context_summary
-    and customer_history (loaded from Redis/Postgres) are always fresh.
-    Only messages from the summary cursor onward are included — the prior
-    history is already captured in context_summary inside the system prompt.
+    Uses a dedicated planning prompt (not the response-generator prompt) so
+    that write-op confirmation rules and response-style guidance do not bleed
+    into tool selection decisions.
 
     Args:
         state: Current AgentState.
@@ -27,11 +27,9 @@ def _build_messages(state: AgentState) -> list[BaseMessage]:
     Returns:
         List starting with SystemMessage followed by the unsummarized messages.
     """
-    system_msg: SystemMessage = build_system_prompt(
-        user_id=state["user_id"],
+    system_msg: SystemMessage = build_tool_planner_prompt(
         user_role=state["user_role"],
-        context_summary=state.get("context_summary"),
-        customer_history=state.get("customer_history"),
+        intent=state.get("intent", "unknown"),
     )
     all_messages = list(state["messages"])
     summarized_through: int = state.get("summarized_message_count", 0)
@@ -133,6 +131,21 @@ def make_tool_planner_node(llm: ChatOpenAI):
         log.info("tool_planner.started")
 
         # ------------------------------------------------------------------
+        # 0. Short-circuit for direct-response intents
+        # ------------------------------------------------------------------
+        # In the live graph these intents are routed around the tool_planner
+        # entirely. Guard here for isolation-eval correctness and defence-in-depth.
+        if intent in NO_TOOL_INTENTS:
+            log.info("tool_planner.no_tool_intent", intent=intent)
+            return {
+                "requires_tool": False,
+                "selected_tool": None,
+                "tool_input": None,
+                "tool_error": None,
+                "tool_retry_count": tool_retry_count,
+            }
+
+        # ------------------------------------------------------------------
         # 1. Fetch tool schemas from the in-process registry
         # ------------------------------------------------------------------
         try:
@@ -152,17 +165,23 @@ def make_tool_planner_node(llm: ChatOpenAI):
         log.debug("tool_planner.tools_loaded", tool_count=len(tools))
 
         # ------------------------------------------------------------------
-        # 2. Build the LLM with bound tools
+        # 2. Narrow tool list to those relevant for the current intent
+        # ------------------------------------------------------------------
+        tools = scope_tools_for_intent(tools, intent, user_role)
+        log.debug("tool_planner.tools_scoped", tool_count=len(tools), intent=intent)
+
+        # ------------------------------------------------------------------
+        # 3. Build the LLM with bound tools
         # ------------------------------------------------------------------
         llm_with_tools = llm.bind_tools(tools, tool_choice="auto")
 
         # ------------------------------------------------------------------
-        # 3. Build message list (system prompt + conversation history)
+        # 4. Build message list (system prompt + conversation history)
         # ------------------------------------------------------------------
         messages = _build_messages(state)
 
         # ------------------------------------------------------------------
-        # 4. Invoke the LLM
+        # 5. Invoke the LLM
         # ------------------------------------------------------------------
         try:
             ai_msg: AIMessage = await llm_with_tools.ainvoke(messages)
@@ -180,7 +199,7 @@ def make_tool_planner_node(llm: ChatOpenAI):
             }
 
         # ------------------------------------------------------------------
-        # 5. Parse the response
+        # 6. Parse the response
         # ------------------------------------------------------------------
         if not ai_msg.tool_calls:
             log.info(
@@ -207,7 +226,7 @@ def make_tool_planner_node(llm: ChatOpenAI):
         )
 
         # ------------------------------------------------------------------
-        # 6. Validate args against the tool's Pydantic schema
+        # 7. Validate args against the tool's Pydantic schema
         # ------------------------------------------------------------------
         tool_input, validation_error = _validate_tool_args(
             tool_name=selected_tool,
@@ -237,7 +256,7 @@ def make_tool_planner_node(llm: ChatOpenAI):
         )
 
         # ------------------------------------------------------------------
-        # 7. Return the plan
+        # 8. Return the plan
         # ------------------------------------------------------------------
         return {
             "selected_tool": selected_tool,
