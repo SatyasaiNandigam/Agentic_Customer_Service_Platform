@@ -84,13 +84,13 @@ async def run_single(
     semaphore: asyncio.Semaphore,
 ) -> DelegatorResult:
     state = _build_state(record)
-    t0 = time.perf_counter()
     error: str | None = None
 
     prompt_tokens = 0
     completion_tokens = 0
 
     async with semaphore:
+        t0 = time.perf_counter()
         try:
             with capture_tokens() as cb:
                 output = await node(state)
@@ -99,8 +99,7 @@ async def run_single(
         except Exception as exc:
             output = {"customer_domain": "need_advice"}
             error = str(exc)
-
-    latency_ms = (time.perf_counter() - t0) * 1000
+        latency_ms = (time.perf_counter() - t0) * 1000
     predicted = output.get("customer_domain", "need_advice")
 
     return DelegatorResult(

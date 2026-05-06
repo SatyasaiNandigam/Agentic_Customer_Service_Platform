@@ -1,0 +1,731 @@
+{
+  "run_metadata": {
+    "date": "2026-05-05 16:07:13",
+    "dataset_path": "eval\\datasets\\intent_classification.jsonl",
+    "total_cases": 218,
+    "model": "gpt-4o-mini",
+    "confidence_threshold": 0.5,
+    "concurrency": 10,
+    "duration_seconds": 26.2,
+    "errors": 27
+  },
+  "summary": {
+    "overall_accuracy": 0.844,
+    "macro_f1": 0.9003,
+    "macro_f1_threshold": 0.9,
+    "passes_all_thresholds": false
+  },
+  "thresholds": {
+    "macro_f1": {
+      "value": 0.9003,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "need_information_f1": {
+      "value": 0.9394,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "need_assistance_f1": {
+      "value": 0.9512,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "need_advice_f1": {
+      "value": 0.7753,
+      "threshold": 0.85,
+      "pass": false
+    },
+    "false_rejection_rate": {
+      "value": 0.1118,
+      "threshold": 0.05,
+      "pass": false
+    },
+    "requires_tool_accuracy": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    }
+  },
+  "per_intent": {
+    "order_status": {
+      "tp": 16,
+      "fp": 4,
+      "fn": 3,
+      "support": 19,
+      "precision": 0.8,
+      "recall": 0.8421,
+      "f1": 0.8205
+    },
+    "shipment_tracking": {
+      "tp": 19,
+      "fp": 2,
+      "fn": 2,
+      "support": 21,
+      "precision": 0.9048,
+      "recall": 0.9048,
+      "f1": 0.9048
+    },
+    "refund_status": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 2,
+      "support": 20,
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1": 0.9474
+    },
+    "account_info": {
+      "tp": 14,
+      "fp": 2,
+      "fn": 1,
+      "support": 15,
+      "precision": 0.875,
+      "recall": 0.9333,
+      "f1": 0.9032
+    },
+    "review_lookup": {
+      "tp": 14,
+      "fp": 0,
+      "fn": 0,
+      "support": 14,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "product_inquiry": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 0,
+      "support": 18,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "product_search": {
+      "tp": 16,
+      "fp": 0,
+      "fn": 0,
+      "support": 16,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "order_cancel": {
+      "tp": 19,
+      "fp": 0,
+      "fn": 2,
+      "support": 21,
+      "precision": 1.0,
+      "recall": 0.9048,
+      "f1": 0.95
+    },
+    "refund_request": {
+      "tp": 20,
+      "fp": 2,
+      "fn": 0,
+      "support": 20,
+      "precision": 0.9091,
+      "recall": 1.0,
+      "f1": 0.9524
+    },
+    "faq_policy": {
+      "tp": 15,
+      "fp": 0,
+      "fn": 3,
+      "support": 18,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "f1": 0.9091
+    },
+    "chitchat": {
+      "tp": 9,
+      "fp": 0,
+      "fn": 9,
+      "support": 18,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667
+    },
+    "unknown": {
+      "tp": 18,
+      "fp": 12,
+      "fn": 0,
+      "support": 18,
+      "precision": 0.6,
+      "recall": 1.0,
+      "f1": 0.75
+    }
+  },
+  "domain_breakdown": {
+    "need_information": {
+      "macro_f1": 0.9394,
+      "accuracy": 0.9268,
+      "count": 123,
+      "threshold": 0.9,
+      "passes_threshold": true,
+      "per_intent": {
+        "order_status": {
+          "f1": 0.8205,
+          "support": 19
+        },
+        "shipment_tracking": {
+          "f1": 0.9048,
+          "support": 21
+        },
+        "refund_status": {
+          "f1": 0.9474,
+          "support": 20
+        },
+        "account_info": {
+          "f1": 0.9032,
+          "support": 15
+        },
+        "review_lookup": {
+          "f1": 1.0,
+          "support": 14
+        },
+        "product_inquiry": {
+          "f1": 1.0,
+          "support": 18
+        },
+        "product_search": {
+          "f1": 1.0,
+          "support": 16
+        }
+      }
+    },
+    "need_assistance": {
+      "macro_f1": 0.9512,
+      "accuracy": 0.9268,
+      "count": 41,
+      "threshold": 0.95,
+      "passes_threshold": true,
+      "per_intent": {
+        "order_cancel": {
+          "f1": 0.95,
+          "support": 21
+        },
+        "refund_request": {
+          "f1": 0.9524,
+          "support": 20
+        }
+      }
+    },
+    "need_advice": {
+      "macro_f1": 0.7753,
+      "accuracy": 0.5926,
+      "count": 54,
+      "threshold": 0.85,
+      "passes_threshold": false,
+      "per_intent": {
+        "faq_policy": {
+          "f1": 0.9091,
+          "support": 18
+        },
+        "chitchat": {
+          "f1": 0.6667,
+          "support": 18
+        },
+        "unknown": {
+          "f1": 0.75,
+          "support": 18
+        }
+      }
+    }
+  },
+  "false_rejection": {
+    "false_rejection_rate": 0.1118,
+    "false_rejection_count": 18,
+    "total_eligible": 161,
+    "threshold": 0.05,
+    "passes_threshold": false
+  },
+  "fallback_rate": {
+    "fallback_rate": 0.1239,
+    "fallback_count": 27,
+    "total": 218,
+    "threshold": 0.02,
+    "passes_threshold": false
+  },
+  "requires_tool": {
+    "accuracy": 1.0,
+    "correct": 218,
+    "total": 218,
+    "passes_threshold": true
+  },
+  "confidence_calibration": [
+    {
+      "bin_lower": 0.0,
+      "bin_upper": 0.2,
+      "count": 27,
+      "mean_confidence": 0.0,
+      "accuracy": 0.0,
+      "calibration_gap": 0.0
+    },
+    {
+      "bin_lower": 0.2,
+      "bin_upper": 0.4,
+      "count": 0,
+      "mean_confidence": null,
+      "accuracy": null,
+      "calibration_gap": null
+    },
+    {
+      "bin_lower": 0.4,
+      "bin_upper": 0.6,
+      "count": 1,
+      "mean_confidence": 0.4,
+      "accuracy": 0.0,
+      "calibration_gap": 0.4
+    },
+    {
+      "bin_lower": 0.6,
+      "bin_upper": 0.8,
+      "count": 0,
+      "mean_confidence": null,
+      "accuracy": null,
+      "calibration_gap": null
+    },
+    {
+      "bin_lower": 0.8,
+      "bin_upper": 1.0,
+      "count": 190,
+      "mean_confidence": 0.9227,
+      "accuracy": 0.9684,
+      "calibration_gap": 0.0457
+    }
+  ],
+  "history_accuracy": {
+    "with_history": {
+      "accuracy": 0.4286,
+      "count": 14
+    },
+    "without_history": {
+      "accuracy": 0.8725,
+      "count": 204
+    }
+  },
+  "boundary_pair_accuracy": {
+    "chitchat|unknown": {
+      "accuracy": 0.25,
+      "count": 4,
+      "errors": 3
+    },
+    "faq_policy|unknown": {
+      "accuracy": 0.0,
+      "count": 4,
+      "errors": 4
+    },
+    "order_cancel|refund_request": {
+      "accuracy": 1.0,
+      "count": 8,
+      "errors": 0
+    },
+    "order_status|refund_status": {
+      "accuracy": 0.8333,
+      "count": 6,
+      "errors": 1
+    },
+    "order_status|shipment_tracking": {
+      "accuracy": 0.7143,
+      "count": 7,
+      "errors": 2
+    },
+    "product_inquiry|product_search": {
+      "accuracy": 1.0,
+      "count": 6,
+      "errors": 0
+    }
+  },
+  "performance": {
+    "latency_ms": {
+      "p50": 966.9,
+      "p95": 1625.2,
+      "mean": 1121.6,
+      "max": 4752.0
+    },
+    "tokens": {
+      "total_prompt": 195424,
+      "total_completion": 2309,
+      "avg_prompt_per_call": 896.4,
+      "avg_completion_per_call": 10.6
+    }
+  },
+  "failures": [
+    {
+      "id": "account_info_hist_001",
+      "text": "Is it still showing the old one?",
+      "customer_domain": "need_information",
+      "expected_intent": "account_info",
+      "predicted_intent": "order_status",
+      "confidence": 0.0,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_002",
+      "text": "Good morning!",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_003",
+      "text": "Thanks so much, you've been really helpful!",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_006",
+      "text": "Bye!",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_007",
+      "text": "See you later!",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_008",
+      "text": "You were super helpful, thank you!",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_010",
+      "text": "How are you doing today?",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_012",
+      "text": "What kinds of things can you do for me?",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_vs_unknown_002",
+      "text": "Are you smarter than ChatGPT?",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.8,
+      "had_history": false,
+      "boundary_pair": "chitchat|unknown",
+      "error": null
+    },
+    {
+      "id": "chitchat_vs_unknown_004",
+      "text": "What is your favorite food?",
+      "customer_domain": "need_advice",
+      "expected_intent": "chitchat",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": "chitchat|unknown",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_vs_unknown_001",
+      "text": "Is buying online safe?",
+      "customer_domain": "need_advice",
+      "expected_intent": "faq_policy",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": "faq_policy|unknown",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_vs_unknown_003",
+      "text": "What happens to my data when I buy from you?",
+      "customer_domain": "need_advice",
+      "expected_intent": "faq_policy",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": "faq_policy|unknown",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_policy_hist_001",
+      "text": "What about for international orders?",
+      "customer_domain": "need_advice",
+      "expected_intent": "faq_policy",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "order_cancel_010",
+      "text": "Can I still cancel if it's already processing?",
+      "customer_domain": "need_assistance",
+      "expected_intent": "order_cancel",
+      "predicted_intent": "refund_request",
+      "confidence": 0.4,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "order_cancel_hist_002",
+      "text": "Yes, go ahead and cancel.",
+      "customer_domain": "need_assistance",
+      "expected_intent": "order_cancel",
+      "predicted_intent": "refund_request",
+      "confidence": 0.0,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "order_status_003",
+      "text": "Show me all my recent orders.",
+      "customer_domain": "need_information",
+      "expected_intent": "order_status",
+      "predicted_intent": "account_info",
+      "confidence": 0.88,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "order_status_vs_shipment_001",
+      "text": "Where is my order?",
+      "customer_domain": "need_information",
+      "expected_intent": "order_status",
+      "predicted_intent": "shipment_tracking",
+      "confidence": 0.92,
+      "had_history": false,
+      "boundary_pair": "order_status|shipment_tracking",
+      "error": null
+    },
+    {
+      "id": "order_status_vs_shipment_002",
+      "text": "Is my order on its way?",
+      "customer_domain": "need_information",
+      "expected_intent": "order_status",
+      "predicted_intent": "shipment_tracking",
+      "confidence": 0.93,
+      "had_history": false,
+      "boundary_pair": "order_status|shipment_tracking",
+      "error": null
+    },
+    {
+      "id": "order_status_hist_001",
+      "text": "Any update on that?",
+      "customer_domain": "need_information",
+      "expected_intent": "order_status",
+      "predicted_intent": "order_status",
+      "confidence": 0.0,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "refund_request_hist_001",
+      "text": "Yes, please initiate the refund.",
+      "customer_domain": "need_assistance",
+      "expected_intent": "refund_request",
+      "predicted_intent": "refund_request",
+      "confidence": 0.0,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "order_status_vs_refund_003",
+      "text": "Is there any credit on my account from a recent return?",
+      "customer_domain": "need_information",
+      "expected_intent": "refund_status",
+      "predicted_intent": "account_info",
+      "confidence": 0.85,
+      "had_history": false,
+      "boundary_pair": "order_status|refund_status",
+      "error": null
+    },
+    {
+      "id": "refund_status_hist_001",
+      "text": "Still no movement on that?",
+      "customer_domain": "need_information",
+      "expected_intent": "refund_status",
+      "predicted_intent": "order_status",
+      "confidence": 0.0,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "order_status_hist_003",
+      "text": "Has it shipped yet?",
+      "customer_domain": "need_information",
+      "expected_intent": "shipment_tracking",
+      "predicted_intent": "order_status",
+      "confidence": 0.93,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": null
+    },
+    {
+      "id": "shipment_tracking_hist_001",
+      "text": "What city is it in now?",
+      "customer_domain": "need_information",
+      "expected_intent": "shipment_tracking",
+      "predicted_intent": "order_status",
+      "confidence": 0.0,
+      "had_history": true,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_002",
+      "text": "Explain quantum physics to me.",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_003",
+      "text": "Write me a poem about the ocean.",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_005",
+      "text": "What's the best recipe for pasta?",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_006",
+      "text": "Can you help me write a cover letter?",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_007",
+      "text": "Translate this sentence into Spanish.",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_009",
+      "text": "Can you recommend a good Netflix show?",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "unknown_011",
+      "text": "What's 15% of 240?",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": null,
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_vs_unknown_002",
+      "text": "How do shopping bots work?",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": "faq_policy|unknown",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "faq_vs_unknown_004",
+      "text": "What are consumer rights in the EU?",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": "faq_policy|unknown",
+      "error": "classifier_fallback"
+    },
+    {
+      "id": "chitchat_vs_unknown_001",
+      "text": "Can you speak French?",
+      "customer_domain": "need_advice",
+      "expected_intent": "unknown",
+      "predicted_intent": "unknown",
+      "confidence": 0.0,
+      "had_history": false,
+      "boundary_pair": "chitchat|unknown",
+      "error": "classifier_fallback"
+    }
+  ]
+}

@@ -26,6 +26,7 @@ FAIL_COLOR = "#e74c3c"
 EVAL_TYPES = {
     "Intent Classifier":  "intent_classification",
     "Customer Delegator": "customer_delegator",
+    "Tool Planner":       "tool_planner",
 }
 
 
@@ -488,6 +489,140 @@ def classifier_failures_table(data: dict) -> None:
     )
 
 
+# ── tool planner charts ───────────────────────────────────────────────────────
+
+PLANNER_CATEGORIES = ["intent_mapping", "no_tool", "retry", "implicit", "rbac"]
+PLANNER_CATEGORY_LABELS = {
+    "intent_mapping": "Intent Mapping",
+    "no_tool":        "No Tool",
+    "retry":          "Retry",
+    "implicit":       "Implicit Args",
+    "rbac":           "RBAC Boundary",
+}
+
+
+def chart_planner_thresholds(data: dict) -> go.Figure:
+    display = {
+        "tool_selection_accuracy": ("Tool Selection Accuracy", False),
+        "args_coverage_rate":      ("Args Coverage Rate",     False),
+        "p95_latency_ms":          ("p95 Latency (ms)",       True),
+        "rbac_violations":         ("RBAC Violations",        True),
+    }
+    labels, values, colors = [], [], []
+    for key, (label, _) in display.items():
+        t = data["thresholds"][key]
+        labels.append(label)
+        values.append(t["value"])
+        colors.append(_color(t["pass"]))
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=values, y=labels, orientation="h", marker_color=colors,
+        text=[f"{v:.4f}" if isinstance(v, float) else str(v) for v in values],
+        textposition="outside",
+    ))
+    fig.update_layout(
+        title="Threshold Checks",
+        xaxis=dict(range=[0, max(max(values) * 1.25, 1.1)]),
+        height=280, margin=dict(l=200, r=80, t=40, b=20),
+    )
+    return fig
+
+
+def chart_planner_category_accuracy(data: dict) -> go.Figure:
+    per = data["per_category"]
+    labels = [PLANNER_CATEGORY_LABELS.get(c, c) for c in PLANNER_CATEGORIES]
+    accuracies = [per.get(c, {}).get("accuracy", 0.0) for c in PLANNER_CATEGORIES]
+    counts = [per.get(c, {}).get("count", 0) for c in PLANNER_CATEGORIES]
+
+    fig = go.Figure(go.Bar(
+        x=labels, y=accuracies,
+        marker_color=[_color(a >= 0.90) for a in accuracies],
+        text=[f"{a:.1%} (n={c})" for a, c in zip(accuracies, counts)],
+        textposition="outside",
+    ))
+    fig.add_hline(y=0.90, line_dash="dot", line_color="red",
+                  annotation_text="90% target", annotation_position="top right")
+    fig.update_layout(
+        title="Accuracy by Category",
+        yaxis=dict(range=[0, 1.2]),
+        height=300, margin=dict(t=50, b=20),
+    )
+    return fig
+
+
+def chart_planner_args_coverage(data: dict) -> go.Figure:
+    per = data["per_category"]
+    cats = [c for c in PLANNER_CATEGORIES if per.get(c, {}).get("count", 0) > 0]
+    labels = [PLANNER_CATEGORY_LABELS.get(c, c) for c in cats]
+    tools_correct = [per[c].get("correct", 0) for c in cats]
+    counts = [per[c]["count"] for c in cats]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        name="Correct", x=labels, y=tools_correct, marker_color=PASS_COLOR,
+        text=[f"{v}" for v in tools_correct], textposition="outside",
+    ))
+    fig.add_trace(go.Bar(
+        name="Incorrect", x=labels,
+        y=[c - t for c, t in zip(counts, tools_correct)],
+        marker_color=FAIL_COLOR,
+        text=[f"{c - t}" for c, t in zip(counts, tools_correct)],
+        textposition="outside",
+    ))
+    fig.update_layout(
+        title="Correct vs. Incorrect Tool Selection by Category",
+        barmode="stack", height=300, margin=dict(t=50, b=20),
+        legend=dict(orientation="h", y=-0.2),
+    )
+    return fig
+
+
+def planner_failures_table(data: dict) -> None:
+    import pandas as pd
+    rows = [
+        {
+            "ID": f["id"],
+            "Category": f["category"],
+            "Intent": f["intent"],
+            "Expected Tool": f["expected_tool"] or "null",
+            "Predicted Tool": f["predicted_tool"] or "null",
+            "Args Covered": f"{f['args_covered']:.0%}",
+            "Tool Input": json.dumps(f["tool_input"]) if f["tool_input"] else "—",
+            "Error": f.get("error") or "",
+            "Notes": f.get("notes") or "",
+        }
+        for f in data["failures"]
+    ]
+    st.dataframe(
+        pd.DataFrame(rows), use_container_width=True,
+        column_config={
+            "Expected Tool": st.column_config.TextColumn(width="medium"),
+            "Predicted Tool": st.column_config.TextColumn(width="medium"),
+            "Tool Input": st.column_config.TextColumn(width="large"),
+        },
+        hide_index=True,
+    )
+
+
+def _planner_status_banner(data: dict) -> None:
+    summary = data["summary"]
+    passes = summary["passes_all_thresholds"]
+    label = "✅ ALL THRESHOLDS PASS" if passes else "❌ THRESHOLDS FAILING"
+    tool_acc = summary["tool_selection_accuracy"]
+    args_cov = summary["args_coverage_rate"]
+    p95 = summary["p95_latency_ms"]
+    st.markdown(
+        f"<div style='padding:12px 20px;background:{_color(passes)};color:white;"
+        f"border-radius:6px;font-size:1.1rem;font-weight:600;'>"
+        f"{label} &nbsp;|&nbsp; Tool Accuracy: {tool_acc:.1%} &nbsp;|&nbsp; "
+        f"Args Coverage: {args_cov:.1%} &nbsp;|&nbsp; p95: {p95:.0f}ms"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown("")
+
+
 # ── page renderers ────────────────────────────────────────────────────────────
 
 def render_delegator(data: dict) -> None:
@@ -582,6 +717,45 @@ def render_classifier(data: dict) -> None:
         st.success("No failures — all predictions correct.")
 
 
+def render_tool_planner(data: dict) -> None:
+    meta = data["run_metadata"]
+    summary = data["summary"]
+
+    st.title("Tool Planner Node — Eval Dashboard")
+    cols = st.columns(5)
+    cols[0].metric("Date", meta["date"])
+    cols[1].metric("Model", meta["model"])
+    cols[2].metric("Total Cases", meta["total_cases"])
+    cols[3].metric("Duration", f"{meta['duration_seconds']}s")
+    cols[4].metric("Errors", meta["errors"])
+    _planner_status_banner(data)
+
+    c1, c2 = st.columns([1, 1.4])
+    with c1:
+        st.plotly_chart(chart_planner_thresholds(data), use_container_width=True)
+    with c2:
+        st.plotly_chart(chart_planner_category_accuracy(data), use_container_width=True)
+
+    c3, c4 = st.columns([1, 1.4])
+    with c3:
+        rbac = data.get("rbac", {})
+        if rbac.get("count", 0) > 0:
+            st.error(f"⚠️ RBAC violation: {rbac['count']} customer-role result(s) selected a non-customer tool.")
+            for v in rbac.get("violations", []):
+                st.write(f"  • `{v['id']}` → `{v['predicted_tool']}`")
+        else:
+            st.success("✅ RBAC: no non-customer tools selected by customer role.")
+        st.plotly_chart(chart_planner_args_coverage(data), use_container_width=True)
+    with c4:
+        st.plotly_chart(chart_performance(data), use_container_width=True)
+
+    st.subheader(f"Failures ({len(data['failures'])})")
+    if data["failures"]:
+        planner_failures_table(data)
+    else:
+        st.success("No failures — all tool selections correct.")
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -619,6 +793,8 @@ def main() -> None:
 
     if eval_suffix == "customer_delegator":
         render_delegator(data)
+    elif eval_suffix == "tool_planner":
+        render_tool_planner(data)
     else:
         render_classifier(data)
 
