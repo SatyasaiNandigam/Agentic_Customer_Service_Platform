@@ -1,0 +1,292 @@
+{
+  "run_metadata": {
+    "date": "2026-05-06 17:34:21",
+    "dataset_path": "eval\\datasets\\memory.jsonl",
+    "total_cases": 25,
+    "concurrency": 5,
+    "duration_seconds": 13.2,
+    "errors": 0,
+    "note": "Hard-assertion harness for maybe_summarize node. No LLM judge."
+  },
+  "summary": {
+    "total_records": 25,
+    "triggered_count": 20,
+    "error_count": 0,
+    "passes_all_thresholds": false
+  },
+  "thresholds": {
+    "trigger_precision": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "trigger_recall": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "entity_retention": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "pair_preservation": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "token_reduction_rate": {
+      "value": 0.0795,
+      "threshold": 0.4,
+      "pass": false
+    },
+    "summary_length_pass_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "max_tokens_allowed": 300,
+      "max_tokens_seen": 150,
+      "pass": true
+    },
+    "excludes_pass_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    }
+  },
+  "trigger_detail": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "tp": 20,
+    "fp": 0,
+    "fn": 0,
+    "passes_precision": true,
+    "passes_recall": true
+  },
+  "token_reduction": {
+    "aggregate_rate": 0.0795,
+    "total_input_tokens": 2252,
+    "total_output_tokens": 2073,
+    "triggered_count": 20,
+    "passes": false,
+    "per_record": [
+      {
+        "id": "at_001",
+        "category": "at_threshold",
+        "input_tokens": 118,
+        "output_tokens": 86,
+        "reduction_rate": 0.2712
+      },
+      {
+        "id": "at_002",
+        "category": "at_threshold",
+        "input_tokens": 111,
+        "output_tokens": 121,
+        "reduction_rate": -0.0901
+      },
+      {
+        "id": "at_003",
+        "category": "at_threshold",
+        "input_tokens": 120,
+        "output_tokens": 97,
+        "reduction_rate": 0.1917
+      },
+      {
+        "id": "at_004",
+        "category": "at_threshold",
+        "input_tokens": 123,
+        "output_tokens": 96,
+        "reduction_rate": 0.2195
+      },
+      {
+        "id": "at_005",
+        "category": "at_threshold",
+        "input_tokens": 116,
+        "output_tokens": 85,
+        "reduction_rate": 0.2672
+      },
+      {
+        "id": "pp_001",
+        "category": "pair_preservation",
+        "input_tokens": 87,
+        "output_tokens": 62,
+        "reduction_rate": 0.2874
+      },
+      {
+        "id": "pp_002",
+        "category": "pair_preservation",
+        "input_tokens": 89,
+        "output_tokens": 45,
+        "reduction_rate": 0.4944
+      },
+      {
+        "id": "pp_003",
+        "category": "pair_preservation",
+        "input_tokens": 94,
+        "output_tokens": 88,
+        "reduction_rate": 0.0638
+      },
+      {
+        "id": "pp_004",
+        "category": "pair_preservation",
+        "input_tokens": 90,
+        "output_tokens": 109,
+        "reduction_rate": -0.2111
+      },
+      {
+        "id": "pp_005",
+        "category": "pair_preservation",
+        "input_tokens": 108,
+        "output_tokens": 121,
+        "reduction_rate": -0.1204
+      },
+      {
+        "id": "inc_001",
+        "category": "incremental",
+        "input_tokens": 126,
+        "output_tokens": 144,
+        "reduction_rate": -0.1429
+      },
+      {
+        "id": "inc_002",
+        "category": "incremental",
+        "input_tokens": 101,
+        "output_tokens": 150,
+        "reduction_rate": -0.4851
+      },
+      {
+        "id": "inc_003",
+        "category": "incremental",
+        "input_tokens": 111,
+        "output_tokens": 128,
+        "reduction_rate": -0.1532
+      },
+      {
+        "id": "inc_004",
+        "category": "incremental",
+        "input_tokens": 122,
+        "output_tokens": 99,
+        "reduction_rate": 0.1885
+      },
+      {
+        "id": "inc_005",
+        "category": "incremental",
+        "input_tokens": 104,
+        "output_tokens": 150,
+        "reduction_rate": -0.4423
+      },
+      {
+        "id": "ke_001",
+        "category": "key_entity",
+        "input_tokens": 117,
+        "output_tokens": 81,
+        "reduction_rate": 0.3077
+      },
+      {
+        "id": "ke_002",
+        "category": "key_entity",
+        "input_tokens": 124,
+        "output_tokens": 101,
+        "reduction_rate": 0.1855
+      },
+      {
+        "id": "ke_003",
+        "category": "key_entity",
+        "input_tokens": 120,
+        "output_tokens": 103,
+        "reduction_rate": 0.1417
+      },
+      {
+        "id": "ke_004",
+        "category": "key_entity",
+        "input_tokens": 149,
+        "output_tokens": 129,
+        "reduction_rate": 0.1342
+      },
+      {
+        "id": "ke_005",
+        "category": "key_entity",
+        "input_tokens": 122,
+        "output_tokens": 78,
+        "reduction_rate": 0.3607
+      }
+    ]
+  },
+  "performance": {
+    "all_records_latency_ms": {
+      "p50": 2804.3,
+      "p95": 4359.8,
+      "mean": 2504.7,
+      "max": 4610.5
+    },
+    "triggered_latency_ms": {
+      "p50": 3051.2,
+      "p95": 4438.5,
+      "mean": 3130.9,
+      "max": 4610.5
+    },
+    "api_tokens": {
+      "total_prompt": 5688,
+      "total_completion": 2061,
+      "avg_prompt_per_triggered": 284.4,
+      "avg_completion_per_triggered": 103.0
+    }
+  },
+  "per_category": {
+    "below_threshold": {
+      "count": 5,
+      "triggered": 0,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": null,
+      "avg_output_tokens": null
+    },
+    "at_threshold": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 117.6,
+      "avg_output_tokens": 97.0
+    },
+    "pair_preservation": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 93.6,
+      "avg_output_tokens": 85.0
+    },
+    "incremental": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 112.8,
+      "avg_output_tokens": 134.2
+    },
+    "key_entity": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 126.4,
+      "avg_output_tokens": 98.4
+    }
+  },
+  "failures": []
+}

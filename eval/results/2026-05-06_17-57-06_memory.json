@@ -1,0 +1,292 @@
+{
+  "run_metadata": {
+    "date": "2026-05-06 17:57:06",
+    "dataset_path": "eval\\datasets\\memory.jsonl",
+    "total_cases": 25,
+    "concurrency": 5,
+    "duration_seconds": 18.3,
+    "errors": 0,
+    "note": "Hard-assertion harness for maybe_summarize node. No LLM judge."
+  },
+  "summary": {
+    "total_records": 25,
+    "triggered_count": 20,
+    "error_count": 0,
+    "passes_all_thresholds": true
+  },
+  "thresholds": {
+    "trigger_precision": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "trigger_recall": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "entity_retention": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "pair_preservation": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "token_reduction_rate": {
+      "value": 0.6137,
+      "threshold": 0.4,
+      "pass": true
+    },
+    "summary_length_pass_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "max_tokens_allowed": 400,
+      "max_tokens_seen": 328,
+      "pass": true
+    },
+    "excludes_pass_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    }
+  },
+  "trigger_detail": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "tp": 20,
+    "fp": 0,
+    "fn": 0,
+    "passes_precision": true,
+    "passes_recall": true
+  },
+  "token_reduction": {
+    "aggregate_rate": 0.6137,
+    "total_input_tokens": 13817,
+    "total_output_tokens": 5337,
+    "triggered_count": 20,
+    "passes": true,
+    "per_record": [
+      {
+        "id": "at_001",
+        "category": "at_threshold",
+        "input_tokens": 626,
+        "output_tokens": 248,
+        "reduction_rate": 0.6038
+      },
+      {
+        "id": "at_002",
+        "category": "at_threshold",
+        "input_tokens": 603,
+        "output_tokens": 240,
+        "reduction_rate": 0.602
+      },
+      {
+        "id": "at_003",
+        "category": "at_threshold",
+        "input_tokens": 619,
+        "output_tokens": 275,
+        "reduction_rate": 0.5557
+      },
+      {
+        "id": "at_004",
+        "category": "at_threshold",
+        "input_tokens": 630,
+        "output_tokens": 241,
+        "reduction_rate": 0.6175
+      },
+      {
+        "id": "at_005",
+        "category": "at_threshold",
+        "input_tokens": 649,
+        "output_tokens": 295,
+        "reduction_rate": 0.5455
+      },
+      {
+        "id": "pp_001",
+        "category": "pair_preservation",
+        "input_tokens": 687,
+        "output_tokens": 252,
+        "reduction_rate": 0.6332
+      },
+      {
+        "id": "pp_002",
+        "category": "pair_preservation",
+        "input_tokens": 677,
+        "output_tokens": 263,
+        "reduction_rate": 0.6115
+      },
+      {
+        "id": "pp_003",
+        "category": "pair_preservation",
+        "input_tokens": 708,
+        "output_tokens": 220,
+        "reduction_rate": 0.6893
+      },
+      {
+        "id": "pp_004",
+        "category": "pair_preservation",
+        "input_tokens": 752,
+        "output_tokens": 279,
+        "reduction_rate": 0.629
+      },
+      {
+        "id": "pp_005",
+        "category": "pair_preservation",
+        "input_tokens": 700,
+        "output_tokens": 289,
+        "reduction_rate": 0.5871
+      },
+      {
+        "id": "inc_001",
+        "category": "incremental",
+        "input_tokens": 675,
+        "output_tokens": 250,
+        "reduction_rate": 0.6296
+      },
+      {
+        "id": "inc_002",
+        "category": "incremental",
+        "input_tokens": 689,
+        "output_tokens": 309,
+        "reduction_rate": 0.5515
+      },
+      {
+        "id": "inc_003",
+        "category": "incremental",
+        "input_tokens": 716,
+        "output_tokens": 328,
+        "reduction_rate": 0.5419
+      },
+      {
+        "id": "inc_004",
+        "category": "incremental",
+        "input_tokens": 732,
+        "output_tokens": 243,
+        "reduction_rate": 0.668
+      },
+      {
+        "id": "inc_005",
+        "category": "incremental",
+        "input_tokens": 725,
+        "output_tokens": 280,
+        "reduction_rate": 0.6138
+      },
+      {
+        "id": "ke_001",
+        "category": "key_entity",
+        "input_tokens": 681,
+        "output_tokens": 261,
+        "reduction_rate": 0.6167
+      },
+      {
+        "id": "ke_002",
+        "category": "key_entity",
+        "input_tokens": 666,
+        "output_tokens": 267,
+        "reduction_rate": 0.5991
+      },
+      {
+        "id": "ke_003",
+        "category": "key_entity",
+        "input_tokens": 785,
+        "output_tokens": 289,
+        "reduction_rate": 0.6318
+      },
+      {
+        "id": "ke_004",
+        "category": "key_entity",
+        "input_tokens": 778,
+        "output_tokens": 259,
+        "reduction_rate": 0.6671
+      },
+      {
+        "id": "ke_005",
+        "category": "key_entity",
+        "input_tokens": 719,
+        "output_tokens": 249,
+        "reduction_rate": 0.6537
+      }
+    ]
+  },
+  "performance": {
+    "all_records_latency_ms": {
+      "p50": 4214.7,
+      "p95": 4903.1,
+      "mean": 3462.2,
+      "max": 5449.0
+    },
+    "triggered_latency_ms": {
+      "p50": 4316.4,
+      "p95": 5159.5,
+      "mean": 4327.8,
+      "max": 5449.0
+    },
+    "api_tokens": {
+      "total_prompt": 16961,
+      "total_completion": 5313,
+      "avg_prompt_per_triggered": 848.0,
+      "avg_completion_per_triggered": 265.6
+    }
+  },
+  "per_category": {
+    "below_threshold": {
+      "count": 5,
+      "triggered": 0,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": null,
+      "avg_output_tokens": null
+    },
+    "at_threshold": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 625.4,
+      "avg_output_tokens": 259.8
+    },
+    "pair_preservation": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 704.8,
+      "avg_output_tokens": 260.6
+    },
+    "incremental": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 707.4,
+      "avg_output_tokens": 282.0
+    },
+    "key_entity": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 725.8,
+      "avg_output_tokens": 265.0
+    }
+  },
+  "failures": []
+}

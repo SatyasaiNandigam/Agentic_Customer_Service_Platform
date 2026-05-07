@@ -1,4 +1,4 @@
-# ShopEasy — Agentic AI Customer Service Platform
+# Helix Support — Agentic AI Customer Service Platform
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
@@ -16,7 +16,13 @@
   A production-ready agentic customer service platform built on a deterministic LangGraph DAG — with hierarchical intent classification, a custom FastMCP tool server, LangGraph Checkpointer-backed session state, multi-modal API (REST / SSE / WebSocket), role-based access control, and defense-in-depth input/output guardrails.
 </p>
 
-> **Disclaimer:** This project is a reference implementation built for learning and demonstration purposes. "ShopEasy" is a fictional brand. All customer records, orders, products, reviews, and API responses are entirely **synthetic and auto-generated** — they do not represent any real business, individual, or organization. No proprietary data or third-party APIs are used.
+> **Disclaimer:** This project is a reference implementation built for learning and demonstration purposes. "Helix Support" is a fictional brand. All customer records, orders, products, reviews, and API responses are entirely **synthetic and auto-generated** — they do not represent any real business, individual, or organization. No proprietary data or third-party APIs are used.
+
+---
+
+## Demo
+
+  <video src="assets/demo.mp4" controls width="900"></video>
 
 ---
 
@@ -51,7 +57,7 @@ Expect frequent iteration on `app/agent/prompts/`, `app/guardrails/`, and `tools
 ## Architecture
 
 <p align="center">
-  <img src="assets/architecture_v1.png" alt="ShopEasy Architecture Diagram" width="900"/>
+  <img src="assets/architecture_v1.png" alt="Helix Support Architecture Diagram" width="900"/>
 </p>
 
 ---
@@ -60,7 +66,7 @@ Expect frequent iteration on `app/agent/prompts/`, `app/guardrails/`, and `tools
 
 ```
 User Message
-  └─► guardrails_in      ──  PII redaction, injection detection (regex → Haiku fallback),
+  └─► guardrails_in      ──  PII redaction, injection detection (regex → LLM fallback),
   │                           rate limit (20 msg/min/user)
   │
   └─► customer_delegator ──  Hierarchical domain classification (gpt-4o-mini)
@@ -92,7 +98,6 @@ User Message
 - **13-class intent classifier** — `order_status`, `order_cancel`, `shipment_tracking`, `refund_request`, `refund_status`, `product_inquiry`, `product_search`, `account_info`, `review_lookup`, `chitchat`, `faq_policy`, `complaint`, `unknown`
 - **Structured LLM outputs** — Pydantic-validated responses prevent hallucinated tool calls
 - **Retry budgets** — Up to 2 tool retries and 2 output rewrites per turn before fail-safe response
-- **Hard turn limit** — 5-turn ceiling prevents runaway loops
 - **Complaint escalation** — Automatic routing to human handoff at both the delegator and classifier layers
 
 ### Custom MCP Tool Server
@@ -102,7 +107,7 @@ User Message
 - **Write limits** — Destructive: 1/turn · Write: 3/turn · Read: 10/turn
 
 ### Guardrails (Defense in Depth)
-- **Input guard** — Message length cap (4 000 chars), rate limiting, hard injection patterns (jailbreak, SQL, template injection), soft patterns with Haiku LLM fallback above confidence threshold
+- **Input guard** — Message length cap (4 000 chars), rate limiting, hard injection patterns (jailbreak, SQL, template injection), soft patterns with LLM fallback above confidence threshold
 - **Output guard** — PII leak detection (credit cards, SSNs, API keys), internal field patterns, system leak patterns, grounding verification against tool results
 - **Cheap-first architecture** — Fast regex runs first; LLM fallback invoked only when pattern confidence is below threshold
 
@@ -131,7 +136,7 @@ User Message
 | Layer | Technology |
 |---|---|
 | **Agent Orchestration** | [LangGraph](https://github.com/langchain-ai/langgraph) 1.1.9 |
-| **LLM** | OpenAI `gpt-4o-mini` (classification + response generation) |
+| **LLM** | OpenAI `gpt-4o-mini` (domain delegator + classification + response generation) |
 | **Tool Protocol** | [FastMCP](https://github.com/jlowin/fastmcp) 2.0 over SSE |
 | **API Framework** | [FastAPI](https://fastapi.tiangolo.com/) + Uvicorn (ASGI) |
 | **Cache / Rate Limit** | Redis 7 (async, connection pool — tool cache + rate limiting) |

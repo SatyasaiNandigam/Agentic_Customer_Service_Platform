@@ -1,0 +1,323 @@
+{
+  "run_metadata": {
+    "date": "2026-05-06 17:52:56",
+    "dataset_path": "eval\\datasets\\memory.jsonl",
+    "total_cases": 25,
+    "concurrency": 5,
+    "duration_seconds": 14.0,
+    "errors": 0,
+    "note": "Hard-assertion harness for maybe_summarize node. No LLM judge."
+  },
+  "summary": {
+    "total_records": 25,
+    "triggered_count": 15,
+    "error_count": 0,
+    "passes_all_thresholds": false
+  },
+  "thresholds": {
+    "trigger_precision": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "trigger_recall": {
+      "value": 0.75,
+      "threshold": 1.0,
+      "pass": false
+    },
+    "entity_retention": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "pair_preservation": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "token_reduction_rate": {
+      "value": 0.6255,
+      "threshold": 0.4,
+      "pass": true
+    },
+    "summary_length_pass_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "max_tokens_allowed": 300,
+      "max_tokens_seen": 289,
+      "pass": true
+    },
+    "excludes_pass_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    }
+  },
+  "trigger_detail": {
+    "precision": 1.0,
+    "recall": 0.75,
+    "tp": 15,
+    "fp": 0,
+    "fn": 5,
+    "passes_precision": true,
+    "passes_recall": false
+  },
+  "token_reduction": {
+    "aggregate_rate": 0.6255,
+    "total_input_tokens": 10280,
+    "total_output_tokens": 3850,
+    "triggered_count": 15,
+    "passes": true,
+    "per_record": [
+      {
+        "id": "at_001",
+        "category": "at_threshold",
+        "input_tokens": 626,
+        "output_tokens": 249,
+        "reduction_rate": 0.6022
+      },
+      {
+        "id": "at_002",
+        "category": "at_threshold",
+        "input_tokens": 603,
+        "output_tokens": 238,
+        "reduction_rate": 0.6053
+      },
+      {
+        "id": "at_003",
+        "category": "at_threshold",
+        "input_tokens": 619,
+        "output_tokens": 275,
+        "reduction_rate": 0.5557
+      },
+      {
+        "id": "at_004",
+        "category": "at_threshold",
+        "input_tokens": 630,
+        "output_tokens": 230,
+        "reduction_rate": 0.6349
+      },
+      {
+        "id": "at_005",
+        "category": "at_threshold",
+        "input_tokens": 649,
+        "output_tokens": 267,
+        "reduction_rate": 0.5886
+      },
+      {
+        "id": "pp_001",
+        "category": "pair_preservation",
+        "input_tokens": 687,
+        "output_tokens": 241,
+        "reduction_rate": 0.6492
+      },
+      {
+        "id": "pp_002",
+        "category": "pair_preservation",
+        "input_tokens": 677,
+        "output_tokens": 262,
+        "reduction_rate": 0.613
+      },
+      {
+        "id": "pp_003",
+        "category": "pair_preservation",
+        "input_tokens": 708,
+        "output_tokens": 238,
+        "reduction_rate": 0.6638
+      },
+      {
+        "id": "pp_004",
+        "category": "pair_preservation",
+        "input_tokens": 752,
+        "output_tokens": 275,
+        "reduction_rate": 0.6343
+      },
+      {
+        "id": "pp_005",
+        "category": "pair_preservation",
+        "input_tokens": 700,
+        "output_tokens": 289,
+        "reduction_rate": 0.5871
+      },
+      {
+        "id": "ke_001",
+        "category": "key_entity",
+        "input_tokens": 681,
+        "output_tokens": 273,
+        "reduction_rate": 0.5991
+      },
+      {
+        "id": "ke_002",
+        "category": "key_entity",
+        "input_tokens": 666,
+        "output_tokens": 261,
+        "reduction_rate": 0.6081
+      },
+      {
+        "id": "ke_003",
+        "category": "key_entity",
+        "input_tokens": 785,
+        "output_tokens": 289,
+        "reduction_rate": 0.6318
+      },
+      {
+        "id": "ke_004",
+        "category": "key_entity",
+        "input_tokens": 778,
+        "output_tokens": 214,
+        "reduction_rate": 0.7249
+      },
+      {
+        "id": "ke_005",
+        "category": "key_entity",
+        "input_tokens": 719,
+        "output_tokens": 249,
+        "reduction_rate": 0.6537
+      }
+    ]
+  },
+  "performance": {
+    "all_records_latency_ms": {
+      "p50": 3945.3,
+      "p95": 4898.0,
+      "mean": 2707.9,
+      "max": 5162.6
+    },
+    "triggered_latency_ms": {
+      "p50": 4626.5,
+      "p95": 5049.5,
+      "mean": 4513.2,
+      "max": 5162.6
+    },
+    "api_tokens": {
+      "total_prompt": 12593,
+      "total_completion": 3839,
+      "avg_prompt_per_triggered": 839.5,
+      "avg_completion_per_triggered": 255.9
+    }
+  },
+  "per_category": {
+    "below_threshold": {
+      "count": 5,
+      "triggered": 0,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": null,
+      "avg_output_tokens": null
+    },
+    "at_threshold": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 625.4,
+      "avg_output_tokens": 251.8
+    },
+    "pair_preservation": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 704.8,
+      "avg_output_tokens": 261.0
+    },
+    "incremental": {
+      "count": 5,
+      "triggered": 0,
+      "trigger_correct": 0,
+      "contains_passed": 0,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": null,
+      "avg_output_tokens": null
+    },
+    "key_entity": {
+      "count": 5,
+      "triggered": 5,
+      "trigger_correct": 5,
+      "contains_passed": 5,
+      "excludes_passed": 5,
+      "pair_preserved": 5,
+      "errors": 0,
+      "avg_input_tokens": 725.8,
+      "avg_output_tokens": 257.2
+    }
+  },
+  "failures": [
+    {
+      "id": "inc_001",
+      "category": "incremental",
+      "expected_triggers": true,
+      "actual_triggers": false,
+      "trigger_correct": false,
+      "contains_passed": false,
+      "excludes_passed": true,
+      "pair_preserved": true,
+      "output_token_count": 0,
+      "token_reduction_rate": null,
+      "error": null
+    },
+    {
+      "id": "inc_002",
+      "category": "incremental",
+      "expected_triggers": true,
+      "actual_triggers": false,
+      "trigger_correct": false,
+      "contains_passed": false,
+      "excludes_passed": true,
+      "pair_preserved": true,
+      "output_token_count": 0,
+      "token_reduction_rate": null,
+      "error": null
+    },
+    {
+      "id": "inc_003",
+      "category": "incremental",
+      "expected_triggers": true,
+      "actual_triggers": false,
+      "trigger_correct": false,
+      "contains_passed": false,
+      "excludes_passed": true,
+      "pair_preserved": true,
+      "output_token_count": 0,
+      "token_reduction_rate": null,
+      "error": null
+    },
+    {
+      "id": "inc_004",
+      "category": "incremental",
+      "expected_triggers": true,
+      "actual_triggers": false,
+      "trigger_correct": false,
+      "contains_passed": false,
+      "excludes_passed": true,
+      "pair_preserved": true,
+      "output_token_count": 0,
+      "token_reduction_rate": null,
+      "error": null
+    },
+    {
+      "id": "inc_005",
+      "category": "incremental",
+      "expected_triggers": true,
+      "actual_triggers": false,
+      "trigger_correct": false,
+      "contains_passed": false,
+      "excludes_passed": true,
+      "pair_preserved": true,
+      "output_token_count": 0,
+      "token_reduction_rate": null,
+      "error": null
+    }
+  ]
+}

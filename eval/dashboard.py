@@ -28,6 +28,7 @@ EVAL_TYPES = {
     "Customer Delegator": "customer_delegator",
     "Tool Planner":       "tool_planner",
     "Tool Executor":      "tool_executor",
+    "Memory Summarizer":  "memory",
 }
 
 
@@ -825,6 +826,216 @@ def render_tool_executor(data: dict) -> None:
         st.plotly_chart(chart_executor_detail_rates(data), use_container_width=True)
 
 
+# ── memory summarizer charts ─────────────────────────────────────────────────
+
+MEMORY_CATEGORIES = ["below_threshold", "at_threshold", "pair_preservation", "incremental", "key_entity"]
+MEMORY_CATEGORY_LABELS = {
+    "below_threshold":   "Below Threshold",
+    "at_threshold":      "At Threshold",
+    "pair_preservation": "Pair Preservation",
+    "incremental":       "Incremental",
+    "key_entity":        "Key Entity",
+}
+MEMORY_THRESHOLD_LABELS = {
+    "trigger_precision":        "Trigger Precision",
+    "trigger_recall":           "Trigger Recall",
+    "entity_retention":         "Entity Retention",
+    "pair_preservation":        "Pair Preservation",
+    "token_reduction_rate":     "Token Reduction Rate",
+    "summary_length_pass_rate": "Summary Length Pass Rate",
+    "excludes_pass_rate":       "Excludes Pass Rate",
+}
+
+
+def chart_memory_thresholds(data: dict) -> go.Figure:
+    labels, values, targets, colors = [], [], [], []
+    for key, label in MEMORY_THRESHOLD_LABELS.items():
+        t = data["thresholds"][key]
+        labels.append(label)
+        values.append(t["value"])
+        targets.append(t["threshold"])
+        colors.append(_color(t["pass"]))
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=values, y=labels, orientation="h", marker_color=colors, name="Value",
+        text=[f"{v:.4f}" for v in values], textposition="outside",
+    ))
+    fig.add_trace(go.Scatter(
+        x=targets, y=labels, mode="markers",
+        marker=dict(symbol="line-ns", size=18, color="black", line=dict(width=3)),
+        name="Threshold",
+    ))
+    fig.update_layout(
+        title="Threshold Checks",
+        xaxis=dict(range=[0, 1.2]),
+        height=360, margin=dict(l=210, r=80, t=40, b=20),
+        legend=dict(orientation="h", y=-0.15),
+    )
+    return fig
+
+
+def chart_memory_per_category(data: dict) -> go.Figure:
+    per = data["per_category"]
+    labels = [MEMORY_CATEGORY_LABELS[c] for c in MEMORY_CATEGORIES]
+    counts = [per[c]["count"] for c in MEMORY_CATEGORIES]
+    triggered = [per[c]["triggered"] for c in MEMORY_CATEGORIES]
+    contains_passed = [per[c]["contains_passed"] for c in MEMORY_CATEGORIES]
+    pair_preserved = [per[c]["pair_preserved"] for c in MEMORY_CATEGORIES]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        name="Triggered", x=labels, y=triggered,
+        marker_color="#3498db",
+        text=[f"{v}/{c}" for v, c in zip(triggered, counts)],
+        textposition="outside",
+    ))
+    fig.add_trace(go.Bar(
+        name="Entity Retention Passed", x=labels, y=contains_passed,
+        marker_color=PASS_COLOR,
+        text=[str(v) for v in contains_passed], textposition="outside",
+    ))
+    fig.add_trace(go.Bar(
+        name="Pair Preserved", x=labels, y=pair_preserved,
+        marker_color="#e67e22",
+        text=[str(v) for v in pair_preserved], textposition="outside",
+    ))
+    fig.update_layout(
+        title="Per-Category: Trigger & Quality Checks",
+        barmode="group",
+        yaxis=dict(range=[0, max(counts) * 1.4]),
+        height=360, margin=dict(t=50, b=40),
+        legend=dict(orientation="h", y=-0.2),
+    )
+    return fig
+
+
+def chart_memory_token_reduction(data: dict) -> go.Figure:
+    per_record = data["token_reduction"]["per_record"]
+    aggregate = data["token_reduction"]["aggregate_rate"]
+    threshold = data["thresholds"]["token_reduction_rate"]["threshold"]
+
+    color_map = {
+        "at_threshold":      "#3498db",
+        "pair_preservation": "#2ecc71",
+        "incremental":       "#e67e22",
+        "key_entity":        "#9b59b6",
+    }
+
+    fig = go.Figure()
+    for cat in ["at_threshold", "pair_preservation", "incremental", "key_entity"]:
+        records = [(r["id"], r["reduction_rate"]) for r in per_record if r["category"] == cat]
+        if records:
+            fig.add_trace(go.Bar(
+                name=MEMORY_CATEGORY_LABELS.get(cat, cat),
+                x=[r[0] for r in records],
+                y=[r[1] for r in records],
+                marker_color=color_map[cat],
+                text=[f"{r[1]:.2f}" for r in records],
+                textposition="outside",
+            ))
+    fig.add_hline(
+        y=threshold, line_dash="dot", line_color="red",
+        annotation_text=f"Threshold {threshold:.0%}", annotation_position="top right",
+    )
+    fig.update_layout(
+        title=f"Token Reduction Rate per Record  (aggregate: {aggregate:.1%})",
+        barmode="group",
+        yaxis=dict(range=[0, 1.0], title="Reduction Rate"),
+        height=340, margin=dict(t=50, b=40),
+        legend=dict(orientation="h", y=-0.2),
+    )
+    return fig
+
+
+def chart_memory_latency(data: dict) -> go.Figure:
+    perf = data["performance"]
+    all_lat = perf["all_records_latency_ms"]
+    trig_lat = perf["triggered_latency_ms"]
+    metrics = ["p50", "p95", "mean", "max"]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        name="All Records",
+        x=metrics, y=[all_lat[m] for m in metrics],
+        marker_color="#3498db",
+        text=[f"{all_lat[m]:.0f}ms" for m in metrics], textposition="outside",
+    ))
+    fig.add_trace(go.Bar(
+        name="Triggered Only",
+        x=metrics, y=[trig_lat[m] for m in metrics],
+        marker_color="#9b59b6",
+        text=[f"{trig_lat[m]:.0f}ms" for m in metrics], textposition="outside",
+    ))
+    fig.update_layout(
+        title="Latency: All Records vs. Triggered",
+        barmode="group", yaxis=dict(title="ms"),
+        height=300, margin=dict(t=50, b=20),
+        legend=dict(orientation="h", y=-0.18),
+    )
+    return fig
+
+
+def _memory_status_banner(data: dict) -> None:
+    summary = data["summary"]
+    passes = summary["passes_all_thresholds"]
+    label = "✅ ALL THRESHOLDS PASS" if passes else "❌ THRESHOLDS FAILING"
+    token_rate = data["thresholds"]["token_reduction_rate"]["value"]
+    st.markdown(
+        f"<div style='padding:12px 20px;background:{_color(passes)};color:white;"
+        f"border-radius:6px;font-size:1.1rem;font-weight:600;'>"
+        f"{label} &nbsp;|&nbsp; "
+        f"Triggered: {summary['triggered_count']}/{summary['total_records']} &nbsp;|&nbsp; "
+        f"Token Reduction: {token_rate:.1%} &nbsp;|&nbsp; "
+        f"Errors: {summary['error_count']}"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown("")
+
+
+def render_memory(data: dict) -> None:
+    meta = data["run_metadata"]
+    summary = data["summary"]
+    tr = data["token_reduction"]
+    trig = data["trigger_detail"]
+    tok = data["performance"]["api_tokens"]
+
+    st.title("Memory Summarizer Node — Eval Dashboard")
+    cols = st.columns(5)
+    cols[0].metric("Date", meta["date"])
+    cols[1].metric("Total Cases", meta["total_cases"])
+    cols[2].metric("Triggered", summary["triggered_count"])
+    cols[3].metric("Duration", f"{meta['duration_seconds']}s")
+    cols[4].metric("Errors", summary["error_count"])
+    _memory_status_banner(data)
+
+    c1, c2 = st.columns([1, 1.2])
+    with c1:
+        st.plotly_chart(chart_memory_thresholds(data), use_container_width=True)
+    with c2:
+        st.plotly_chart(chart_memory_per_category(data), use_container_width=True)
+
+    c3, c4 = st.columns([1.6, 1])
+    with c3:
+        st.plotly_chart(chart_memory_token_reduction(data), use_container_width=True)
+    with c4:
+        st.plotly_chart(chart_memory_latency(data), use_container_width=True)
+
+    st.markdown("#### Trigger & Token Summary")
+    c5, c6, c7 = st.columns(3)
+    c5.metric("Trigger Precision", f"{trig['precision']:.1%}",
+              f"TP {trig['tp']}  FP {trig['fp']}")
+    c6.metric("Trigger Recall", f"{trig['recall']:.1%}",
+              f"FN {trig['fn']}")
+    c7.metric("Token Reduction", f"{tr['aggregate_rate']:.1%}",
+              f"{tr['total_input_tokens']:,} → {tr['total_output_tokens']:,} tokens")
+
+    st.markdown("#### API Token Usage (triggered calls)")
+    c8, c9 = st.columns(2)
+    c8.metric("Avg Prompt Tokens / Call", f"{tok['avg_prompt_per_triggered']:.0f}")
+    c9.metric("Avg Completion Tokens / Call", f"{tok['avg_completion_per_triggered']:.0f}")
+
+
 # ── page renderers ────────────────────────────────────────────────────────────
 
 def render_delegator(data: dict) -> None:
@@ -999,6 +1210,8 @@ def main() -> None:
         render_tool_planner(data)
     elif eval_suffix == "tool_executor":
         render_tool_executor(data)
+    elif eval_suffix == "memory":
+        render_memory(data)
     else:
         render_classifier(data)
 
