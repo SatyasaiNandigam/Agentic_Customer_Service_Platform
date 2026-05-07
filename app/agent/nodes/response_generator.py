@@ -24,33 +24,36 @@ _FALLBACK_TOOL_ERROR = (
 def _build_grounding_section(
     tool_result: dict | None,
     tool_error: str | None,
+    guardrail_violation: str | None = None,
 ) -> str:
     """Build the data-grounding section appended to the system prompt.
 
-    Three distinct cases:
+    Three distinct cases for the base body:
     1. ``tool_error`` is set → instruct graceful error acknowledgement only.
     2. ``tool_result`` is present → inject the structured data payload and
        enforce strict grounding (every factual claim must trace to this data).
-    3. Neither is set (chitchat / faq_policy / unknown) → return "" so the
+    3. Neither is set (chitchat / faq_policy / unknown) → body is "" so the
        system prompt remains lean and uncluttered.
 
+    When ``guardrail_violation`` is set (rewrite pass), a correction block is
+    appended so the LLM knows exactly what was wrong in the prior response.
+
     Args:
-        tool_result: Structured dict returned by the tool_executor node.
-                     May be an empty dict ``{}`` when the query returned no
-                     rows — the LLM is instructed to say "not found" in that
-                     case rather than fabricate results.
-        tool_error:  Human-readable error string if tool execution failed.
-                     The content of this string is intentionally withheld from
-                     the LLM — only the fact that retrieval failed is shared.
+        tool_result:         Structured dict returned by the tool_executor node.
+        tool_error:          Human-readable error string if tool execution failed.
+        guardrail_violation: Violation label from guardrails_out (e.g.
+                             "response_not_grounded: order_ids:99999"). Injected
+                             verbatim — the string is already specific enough for
+                             the LLM to act on without a translation layer.
 
     Returns:
         Multi-line string ready to be appended to the system prompt content,
-        or an empty string when no tool was involved in this turn.
+        or an empty string when no tool was involved and no violation occurred.
     """
     if tool_error:
         # Intentionally do not forward the raw error string — it may contain
         # SQL state, table names, or other internals that must stay hidden.
-        return (
+        body = (
             "\n\n## Data retrieval result\n"
             "The database query for this request encountered an error. "
             "Acknowledge the issue professionally: tell the customer you are having "
@@ -58,12 +61,11 @@ def _build_grounding_section(
             "shortly, or contact support if the problem continues. "
             "Do NOT mention the error, any error message text, or any system details."
         )
-
-    if tool_result is not None:
+    elif tool_result is not None:
         # ``default=str`` serialises Decimal, datetime, UUID, etc. that
         # SQLAlchemy returns but json.dumps cannot handle natively.
         data_json = json.dumps(tool_result, indent=2, default=str)
-        return (
+        body = (
             "\n\n## Data retrieved from database\n"
             "The JSON below is the ONLY data source you may use for factual claims. "
             "Every order ID, tracking number, price, date, status, product name, "
@@ -73,9 +75,18 @@ def _build_grounding_section(
             "honestly that no matching information was found — do not guess.\n\n"
             f"```json\n{data_json}\n```"
         )
+    else:
+        # No tool involved — chitchat, faq_policy, or unknown intent.
+        body = ""
 
-    # No tool involved — chitchat, faq_policy, or unknown intent.
-    return ""
+    if guardrail_violation:
+        body += (
+            "\n\n## ⚠ Rewrite required — previous response was rejected\n"
+            f"Your previous response failed this automated check: {guardrail_violation}\n"
+            "Correct this specific issue in your rewrite."
+        )
+
+    return body
 
 
 def _build_messages(state: AgentState) -> list:
@@ -90,6 +101,7 @@ def _build_messages(state: AgentState) -> list:
     grounding = _build_grounding_section(
         tool_result=state.get("tool_result"),
         tool_error=state.get("tool_error"),
+        guardrail_violation=state.get("guardrail_violation"),
     )
     if grounding:
         system_message = SystemMessage(content=system_message.content + grounding)

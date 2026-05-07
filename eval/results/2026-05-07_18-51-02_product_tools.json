@@ -1,0 +1,332 @@
+{
+  "run_metadata": {
+    "date": "2026-05-07 18:51:02",
+    "dataset_path": "eval\\datasets\\product_tools.jsonl",
+    "total_cases": 64,
+    "concurrency": 5,
+    "duration_seconds": 29.8,
+    "search_cases": 38,
+    "detail_cases": 26,
+    "note": "Runs against real MCP server \u2014 ensure MCP_TOOLS_URL is reachable and DB is seeded."
+  },
+  "summary": {
+    "total_cases": 64,
+    "errors": 0,
+    "passes_all_thresholds": true
+  },
+  "thresholds": {
+    "search_hit_rate": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "search_filter_precision": {
+      "value": 1.0,
+      "threshold": 0.98,
+      "pass": true
+    },
+    "search_status_exclusion_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "search_empty_accuracy": {
+      "value": 1.0,
+      "threshold": 0.98,
+      "pass": true
+    },
+    "detail_found_accuracy": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "detail_not_found_handling": {
+      "value": 1.0,
+      "threshold": 0.98,
+      "pass": true
+    },
+    "detail_field_completeness": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "overall_pass_rate": {
+      "value": 1.0,
+      "threshold": 0.92,
+      "pass": true
+    }
+  },
+  "p95_latency_ms": {
+    "value": 2952.6,
+    "threshold": 3500.0,
+    "pass": true
+  },
+  "per_category": {
+    "keyword_exact": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 4,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2908.5
+    },
+    "keyword_partial": {
+      "count": 5,
+      "errors": 0,
+      "success_correct": 5,
+      "contains_passed": 5,
+      "excluded_passed": 5,
+      "count_passed": 5,
+      "error_type_correct": 5,
+      "fields_complete": 5,
+      "avg_latency_ms": 2366.2
+    },
+    "keyword_miss": {
+      "count": 3,
+      "errors": 0,
+      "success_correct": 3,
+      "contains_passed": 3,
+      "excluded_passed": 3,
+      "count_passed": 3,
+      "error_type_correct": 3,
+      "fields_complete": 3,
+      "avg_latency_ms": 2325.5
+    },
+    "category_filter": {
+      "count": 5,
+      "errors": 0,
+      "success_correct": 5,
+      "contains_passed": 5,
+      "excluded_passed": 5,
+      "count_passed": 5,
+      "error_type_correct": 5,
+      "fields_complete": 5,
+      "avg_latency_ms": 2345.9
+    },
+    "brand_filter": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 4,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2299.7
+    },
+    "price_range": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 4,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2268.9
+    },
+    "combined_filters": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 4,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2337.2
+    },
+    "status_exclusion": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 4,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2325.4
+    },
+    "pagination": {
+      "count": 3,
+      "errors": 0,
+      "success_correct": 3,
+      "contains_passed": 3,
+      "excluded_passed": 3,
+      "count_passed": 3,
+      "error_type_correct": 3,
+      "fields_complete": 3,
+      "avg_latency_ms": 2366.2
+    },
+    "edge_case": {
+      "count": 2,
+      "errors": 0,
+      "success_correct": 2,
+      "contains_passed": 2,
+      "excluded_passed": 2,
+      "count_passed": 2,
+      "error_type_correct": 2,
+      "fields_complete": 2,
+      "avg_latency_ms": 2653.2
+    },
+    "detail_by_id": {
+      "count": 5,
+      "errors": 0,
+      "success_correct": 5,
+      "contains_passed": 5,
+      "excluded_passed": 5,
+      "count_passed": 5,
+      "error_type_correct": 5,
+      "fields_complete": 5,
+      "avg_latency_ms": 2676.2
+    },
+    "detail_by_id_not_found": {
+      "count": 5,
+      "errors": 0,
+      "success_correct": 5,
+      "contains_passed": 5,
+      "excluded_passed": 5,
+      "count_passed": 5,
+      "error_type_correct": 5,
+      "fields_complete": 5,
+      "avg_latency_ms": 2028.7
+    },
+    "detail_by_name_exact": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 4,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2208.9
+    },
+    "detail_by_name_prefix": {
+      "count": 3,
+      "errors": 0,
+      "success_correct": 3,
+      "contains_passed": 3,
+      "excluded_passed": 3,
+      "count_passed": 3,
+      "error_type_correct": 3,
+      "fields_complete": 3,
+      "avg_latency_ms": 2150.4
+    },
+    "detail_by_name_miss": {
+      "count": 2,
+      "errors": 0,
+      "success_correct": 2,
+      "contains_passed": 2,
+      "excluded_passed": 2,
+      "count_passed": 2,
+      "error_type_correct": 2,
+      "fields_complete": 2,
+      "avg_latency_ms": 1829.9
+    },
+    "field_completeness": {
+      "count": 3,
+      "errors": 0,
+      "success_correct": 3,
+      "contains_passed": 3,
+      "excluded_passed": 3,
+      "count_passed": 3,
+      "error_type_correct": 3,
+      "fields_complete": 3,
+      "avg_latency_ms": 2295.3
+    },
+    "variant_detail": {
+      "count": 2,
+      "errors": 0,
+      "success_correct": 2,
+      "contains_passed": 2,
+      "excluded_passed": 2,
+      "count_passed": 2,
+      "error_type_correct": 2,
+      "fields_complete": 2,
+      "avg_latency_ms": 1643.1
+    },
+    "error_handling": {
+      "count": 2,
+      "errors": 0,
+      "success_correct": 2,
+      "contains_passed": 2,
+      "excluded_passed": 2,
+      "count_passed": 2,
+      "error_type_correct": 2,
+      "fields_complete": 2,
+      "avg_latency_ms": 1186.8
+    }
+  },
+  "performance": {
+    "all_latency_ms": {
+      "p50": 2313.1,
+      "p95": 2952.6,
+      "mean": 2289.3,
+      "max": 3022.4,
+      "count": 64
+    },
+    "search_latency_ms": {
+      "p50": 2329.7,
+      "p95": 2953.8,
+      "mean": 2407.9,
+      "max": 2955.4,
+      "count": 38
+    },
+    "detail_latency_ms": {
+      "p50": 2157.8,
+      "p95": 2876.9,
+      "mean": 2116.0,
+      "max": 3022.4,
+      "count": 26
+    }
+  },
+  "failures": [],
+  "detail": {
+    "search_hit": {
+      "rate": 1.0,
+      "passed": 38,
+      "total": 38,
+      "failures": []
+    },
+    "search_filter_precision": {
+      "rate": 1.0,
+      "passed": 38,
+      "total": 38,
+      "failures": []
+    },
+    "search_status_exclusion": {
+      "rate": 1.0,
+      "passed": 4,
+      "total": 4,
+      "failures": []
+    },
+    "search_empty_accuracy": {
+      "rate": 1.0,
+      "passed": 3,
+      "total": 3,
+      "failures": []
+    },
+    "detail_found": {
+      "rate": 1.0,
+      "passed": 17,
+      "total": 17,
+      "failures": []
+    },
+    "detail_not_found": {
+      "rate": 1.0,
+      "passed": 9,
+      "total": 9,
+      "failures": []
+    },
+    "field_completeness": {
+      "rate": 1.0,
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    }
+  }
+}

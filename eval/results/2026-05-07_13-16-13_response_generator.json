@@ -1,0 +1,132 @@
+{
+  "run_metadata": {
+    "date": "2026-05-07 13:16:13",
+    "dataset_path": "eval\\datasets\\response_generator.jsonl",
+    "total_cases": 40,
+    "concurrency": 4,
+    "duration_seconds": 151.3,
+    "errors": 0,
+    "geval_enabled": true,
+    "geval_model": "gpt-4o-mini",
+    "llm_model": "gpt-4o-mini",
+    "note": "Response-generator isolation eval: hard assertions + optional GEval"
+  },
+  "summary": {
+    "total_records": 40,
+    "error_count": 0,
+    "passes_all_thresholds": true
+  },
+  "thresholds": {
+    "must_contain_pass_rate": {
+      "value": 1.0,
+      "threshold": 0.98,
+      "pass": true
+    },
+    "must_not_contain_pass_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "off_topic_refusal_rate": {
+      "value": 1.0,
+      "threshold": 0.99,
+      "total_eligible": 2,
+      "pass": true
+    }
+  },
+  "geval_summary": {
+    "evaluated": 40,
+    "errors": 0,
+    "avg_score": 0.8725,
+    "below_threshold": 3,
+    "threshold": 0.7,
+    "passes": true,
+    "per_path": {
+      "tool_result": {
+        "count": 18,
+        "avg_score": 0.9386,
+        "below_threshold": 1
+      },
+      "tool_error": {
+        "count": 11,
+        "avg_score": 0.7599,
+        "below_threshold": 2
+      },
+      "direct": {
+        "count": 11,
+        "avg_score": 0.877,
+        "below_threshold": 0
+      }
+    },
+    "low_scorers": [
+      {
+        "id": "te_005",
+        "score": 0.3162424962538702,
+        "reason": "The response does not clearly address the service issue regarding the availability of hiking boots, as it suggests finding specific boots without acknowledging the internal error context. While the to"
+      },
+      {
+        "id": "rw_005",
+        "score": 0.6077822670104898,
+        "reason": "The actual output correctly identifies the tracking number TRK-999888, the carrier UPS, and the estimated delivery date of May 9, 2026, all of which are consistent with the context. However, it inaccu"
+      },
+      {
+        "id": "rw_004",
+        "score": 0.651621955917019,
+        "reason": "The input clearly presents a service issue but uses technical jargon ('DatabaseConnectionError') that could confuse the customer. The actual output employs professional and empathetic language, avoidi"
+      }
+    ]
+  },
+  "performance": {
+    "latency_ms": {
+      "p50": 1258.4,
+      "p95": 1721.5,
+      "mean": 1339.3,
+      "max": 4604.7
+    },
+    "api_tokens": {
+      "total_prompt": 29732,
+      "total_completion": 1769,
+      "avg_prompt": 743.3,
+      "avg_completion": 44.2
+    }
+  },
+  "per_category": {
+    "tool_result": {
+      "count": 15,
+      "must_contain_passed": 15,
+      "must_not_contain_passed": 15,
+      "refusal_correct": 15,
+      "errors": 0,
+      "avg_latency_ms": 1560.3,
+      "avg_geval_score": 0.9575
+    },
+    "tool_error": {
+      "count": 10,
+      "must_contain_passed": 10,
+      "must_not_contain_passed": 10,
+      "refusal_correct": 10,
+      "errors": 0,
+      "avg_latency_ms": 1101.0,
+      "avg_geval_score": 0.7707
+    },
+    "direct": {
+      "count": 10,
+      "must_contain_passed": 10,
+      "must_not_contain_passed": 10,
+      "refusal_correct": 10,
+      "errors": 0,
+      "avg_latency_ms": 1317.2,
+      "avg_geval_score": 0.8761
+    },
+    "rewrite": {
+      "count": 5,
+      "must_contain_passed": 5,
+      "must_not_contain_passed": 5,
+      "refusal_correct": 5,
+      "errors": 0,
+      "avg_latency_ms": 1197.1,
+      "avg_geval_score": 0.8139
+    }
+  },
+  "failures": []
+}

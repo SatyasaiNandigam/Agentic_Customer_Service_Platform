@@ -1,0 +1,1713 @@
+{
+  "run_metadata": {
+    "date": "2026-05-07 18:20:59",
+    "dataset_path": "eval\\datasets\\product_tools.jsonl",
+    "total_cases": 65,
+    "concurrency": 5,
+    "duration_seconds": 30.0,
+    "search_cases": 39,
+    "detail_cases": 26,
+    "note": "Runs against real MCP server \u2014 ensure MCP_TOOLS_URL is reachable and DB is seeded."
+  },
+  "summary": {
+    "total_cases": 65,
+    "errors": 0,
+    "passes_all_thresholds": false
+  },
+  "thresholds": {
+    "search_hit_rate": {
+      "value": 0.1795,
+      "threshold": 0.95,
+      "pass": false
+    },
+    "search_filter_precision": {
+      "value": 1.0,
+      "threshold": 0.98,
+      "pass": true
+    },
+    "search_status_exclusion_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "search_empty_accuracy": {
+      "value": 1.0,
+      "threshold": 0.98,
+      "pass": true
+    },
+    "detail_found_accuracy": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "detail_not_found_handling": {
+      "value": 0.1111,
+      "threshold": 0.98,
+      "pass": false
+    },
+    "detail_field_completeness": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "pass": true
+    },
+    "overall_pass_rate": {
+      "value": 0.1077,
+      "threshold": 0.92,
+      "pass": false
+    }
+  },
+  "p95_latency_ms": {
+    "value": 2909.2,
+    "threshold": 800.0,
+    "pass": false
+  },
+  "per_category": {
+    "keyword_exact": {
+      "count": 5,
+      "errors": 0,
+      "success_correct": 5,
+      "contains_passed": 0,
+      "excluded_passed": 5,
+      "count_passed": 5,
+      "error_type_correct": 5,
+      "fields_complete": 5,
+      "avg_latency_ms": 2989.0
+    },
+    "keyword_partial": {
+      "count": 5,
+      "errors": 0,
+      "success_correct": 5,
+      "contains_passed": 0,
+      "excluded_passed": 5,
+      "count_passed": 5,
+      "error_type_correct": 5,
+      "fields_complete": 5,
+      "avg_latency_ms": 2308.8
+    },
+    "keyword_miss": {
+      "count": 3,
+      "errors": 0,
+      "success_correct": 3,
+      "contains_passed": 3,
+      "excluded_passed": 3,
+      "count_passed": 3,
+      "error_type_correct": 3,
+      "fields_complete": 3,
+      "avg_latency_ms": 2423.0
+    },
+    "category_filter": {
+      "count": 5,
+      "errors": 0,
+      "success_correct": 5,
+      "contains_passed": 0,
+      "excluded_passed": 5,
+      "count_passed": 5,
+      "error_type_correct": 5,
+      "fields_complete": 5,
+      "avg_latency_ms": 2201.3
+    },
+    "brand_filter": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 0,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2140.6
+    },
+    "price_range": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 0,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2290.3
+    },
+    "combined_filters": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 0,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2174.3
+    },
+    "status_exclusion": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 0,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2298.5
+    },
+    "pagination": {
+      "count": 3,
+      "errors": 0,
+      "success_correct": 3,
+      "contains_passed": 3,
+      "excluded_passed": 3,
+      "count_passed": 3,
+      "error_type_correct": 3,
+      "fields_complete": 3,
+      "avg_latency_ms": 2320.1
+    },
+    "edge_case": {
+      "count": 2,
+      "errors": 0,
+      "success_correct": 2,
+      "contains_passed": 1,
+      "excluded_passed": 2,
+      "count_passed": 2,
+      "error_type_correct": 2,
+      "fields_complete": 2,
+      "avg_latency_ms": 2297.1
+    },
+    "detail_by_id": {
+      "count": 5,
+      "errors": 0,
+      "success_correct": 5,
+      "contains_passed": 0,
+      "excluded_passed": 5,
+      "count_passed": 5,
+      "error_type_correct": 5,
+      "fields_complete": 5,
+      "avg_latency_ms": 2485.1
+    },
+    "detail_by_id_not_found": {
+      "count": 5,
+      "errors": 0,
+      "success_correct": 0,
+      "contains_passed": 5,
+      "excluded_passed": 5,
+      "count_passed": 5,
+      "error_type_correct": 0,
+      "fields_complete": 5,
+      "avg_latency_ms": 2097.3
+    },
+    "detail_by_name_exact": {
+      "count": 4,
+      "errors": 0,
+      "success_correct": 4,
+      "contains_passed": 0,
+      "excluded_passed": 4,
+      "count_passed": 4,
+      "error_type_correct": 4,
+      "fields_complete": 4,
+      "avg_latency_ms": 2091.8
+    },
+    "detail_by_name_prefix": {
+      "count": 3,
+      "errors": 0,
+      "success_correct": 3,
+      "contains_passed": 0,
+      "excluded_passed": 3,
+      "count_passed": 3,
+      "error_type_correct": 3,
+      "fields_complete": 3,
+      "avg_latency_ms": 2277.5
+    },
+    "detail_by_name_miss": {
+      "count": 2,
+      "errors": 0,
+      "success_correct": 0,
+      "contains_passed": 2,
+      "excluded_passed": 2,
+      "count_passed": 2,
+      "error_type_correct": 0,
+      "fields_complete": 2,
+      "avg_latency_ms": 2143.4
+    },
+    "field_completeness": {
+      "count": 3,
+      "errors": 0,
+      "success_correct": 3,
+      "contains_passed": 0,
+      "excluded_passed": 3,
+      "count_passed": 3,
+      "error_type_correct": 3,
+      "fields_complete": 3,
+      "avg_latency_ms": 2407.1
+    },
+    "variant_detail": {
+      "count": 2,
+      "errors": 0,
+      "success_correct": 2,
+      "contains_passed": 0,
+      "excluded_passed": 2,
+      "count_passed": 2,
+      "error_type_correct": 2,
+      "fields_complete": 2,
+      "avg_latency_ms": 2036.5
+    },
+    "error_handling": {
+      "count": 2,
+      "errors": 0,
+      "success_correct": 1,
+      "contains_passed": 1,
+      "excluded_passed": 2,
+      "count_passed": 2,
+      "error_type_correct": 1,
+      "fields_complete": 2,
+      "avg_latency_ms": 1749.3
+    }
+  },
+  "performance": {
+    "all_latency_ms": {
+      "p50": 2238.1,
+      "p95": 2909.2,
+      "mean": 2294.2,
+      "max": 3492.3,
+      "count": 65
+    },
+    "search_latency_ms": {
+      "p50": 2241.2,
+      "p95": 2911.0,
+      "mean": 2357.3,
+      "max": 3492.3,
+      "count": 39
+    },
+    "detail_latency_ms": {
+      "p50": 2188.5,
+      "p95": 2556.7,
+      "mean": 2199.7,
+      "max": 3110.0,
+      "count": 26
+    }
+  },
+  "failures": [
+    {
+      "id": "ps_001",
+      "category": "keyword_exact",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_002",
+      "category": "keyword_exact",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        2
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_003",
+      "category": "keyword_exact",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        12
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_004",
+      "category": "keyword_exact",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        25
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_005",
+      "category": "keyword_exact",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        9
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_006",
+      "category": "keyword_partial",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1,
+        4,
+        8
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_007",
+      "category": "keyword_partial",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        14,
+        18,
+        45
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_008",
+      "category": "keyword_partial",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        39,
+        42,
+        44,
+        50
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_009",
+      "category": "keyword_partial",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        9
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_010",
+      "category": "keyword_partial",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        6
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_014",
+      "category": "category_filter",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_015",
+      "category": "category_filter",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        6,
+        7,
+        8
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_016",
+      "category": "category_filter",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        9,
+        11,
+        12
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_017",
+      "category": "category_filter",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        25,
+        26,
+        27,
+        28
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_018",
+      "category": "category_filter",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        39,
+        41,
+        42
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_019",
+      "category": "brand_filter",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1,
+        4,
+        8,
+        48
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_020",
+      "category": "brand_filter",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        2,
+        7
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_021",
+      "category": "brand_filter",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        14,
+        18,
+        45
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_022",
+      "category": "brand_filter",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        39,
+        42,
+        44,
+        50
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_023",
+      "category": "price_range",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        12,
+        34,
+        41
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_024",
+      "category": "price_range",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1,
+        2,
+        7,
+        8
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_025",
+      "category": "price_range",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        14,
+        15,
+        26,
+        27,
+        33
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_026",
+      "category": "price_range",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1,
+        2,
+        8
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_027",
+      "category": "combined_filters",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1,
+        8
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_028",
+      "category": "combined_filters",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        34
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_029",
+      "category": "combined_filters",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        14,
+        45
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_030",
+      "category": "combined_filters",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        25,
+        28,
+        49
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_031",
+      "category": "status_exclusion",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        12
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_032",
+      "category": "status_exclusion",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        34,
+        38
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_033",
+      "category": "status_exclusion",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        9,
+        11,
+        12
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_034",
+      "category": "status_exclusion",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        14,
+        15,
+        16,
+        45
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "ps_039",
+      "category": "edge_case",
+      "tool": "search_products",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        14,
+        18,
+        45
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_001",
+      "category": "detail_by_id",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_002",
+      "category": "detail_by_id",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        7
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_003",
+      "category": "detail_by_id",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        25
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_004",
+      "category": "detail_by_id",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        34
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_005",
+      "category": "detail_by_id",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        48
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_006",
+      "category": "detail_by_id_not_found",
+      "tool": "get_product_detail",
+      "success_correct": false,
+      "contains_check_passed": true,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": false,
+      "fields_complete": true,
+      "missing_ids": [],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_007",
+      "category": "detail_by_id_not_found",
+      "tool": "get_product_detail",
+      "success_correct": false,
+      "contains_check_passed": true,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": false,
+      "fields_complete": true,
+      "missing_ids": [],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_008",
+      "category": "detail_by_id_not_found",
+      "tool": "get_product_detail",
+      "success_correct": false,
+      "contains_check_passed": true,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": false,
+      "fields_complete": true,
+      "missing_ids": [],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_009",
+      "category": "detail_by_id_not_found",
+      "tool": "get_product_detail",
+      "success_correct": false,
+      "contains_check_passed": true,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": false,
+      "fields_complete": true,
+      "missing_ids": [],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_010",
+      "category": "detail_by_id_not_found",
+      "tool": "get_product_detail",
+      "success_correct": false,
+      "contains_check_passed": true,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": false,
+      "fields_complete": true,
+      "missing_ids": [],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_011",
+      "category": "detail_by_name_exact",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        2
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_012",
+      "category": "detail_by_name_exact",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        34
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_013",
+      "category": "detail_by_name_exact",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        18
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_014",
+      "category": "detail_by_name_exact",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        41
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_015",
+      "category": "detail_by_name_prefix",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_016",
+      "category": "detail_by_name_prefix",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        25
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_017",
+      "category": "detail_by_name_prefix",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        34
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_018",
+      "category": "detail_by_name_miss",
+      "tool": "get_product_detail",
+      "success_correct": false,
+      "contains_check_passed": true,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": false,
+      "fields_complete": true,
+      "missing_ids": [],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_019",
+      "category": "detail_by_name_miss",
+      "tool": "get_product_detail",
+      "success_correct": false,
+      "contains_check_passed": true,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": false,
+      "fields_complete": true,
+      "missing_ids": [],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_020",
+      "category": "field_completeness",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_021",
+      "category": "field_completeness",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        9
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_022",
+      "category": "field_completeness",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        32
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_023",
+      "category": "variant_detail",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        2
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_024",
+      "category": "variant_detail",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        14
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_025",
+      "category": "error_handling",
+      "tool": "get_product_detail",
+      "success_correct": false,
+      "contains_check_passed": true,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": false,
+      "fields_complete": true,
+      "missing_ids": [],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    },
+    {
+      "id": "pd_026",
+      "category": "error_handling",
+      "tool": "get_product_detail",
+      "success_correct": true,
+      "contains_check_passed": false,
+      "excluded_check_passed": true,
+      "count_check_passed": true,
+      "error_type_correct": true,
+      "fields_complete": true,
+      "missing_ids": [
+        1
+      ],
+      "unexpected_ids": [],
+      "actual_error_type": null,
+      "missing_fields": []
+    }
+  ],
+  "detail": {
+    "search_hit": {
+      "rate": 0.1795,
+      "passed": 7,
+      "total": 39,
+      "failures": [
+        {
+          "id": "ps_001",
+          "category": "keyword_exact",
+          "missing_ids": [
+            1
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_002",
+          "category": "keyword_exact",
+          "missing_ids": [
+            2
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_003",
+          "category": "keyword_exact",
+          "missing_ids": [
+            12
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_004",
+          "category": "keyword_exact",
+          "missing_ids": [
+            25
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_005",
+          "category": "keyword_exact",
+          "missing_ids": [
+            9
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_006",
+          "category": "keyword_partial",
+          "missing_ids": [
+            1,
+            4,
+            8
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_007",
+          "category": "keyword_partial",
+          "missing_ids": [
+            14,
+            18,
+            45
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_008",
+          "category": "keyword_partial",
+          "missing_ids": [
+            39,
+            42,
+            44,
+            50
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_009",
+          "category": "keyword_partial",
+          "missing_ids": [
+            9
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_010",
+          "category": "keyword_partial",
+          "missing_ids": [
+            6
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_014",
+          "category": "category_filter",
+          "missing_ids": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_015",
+          "category": "category_filter",
+          "missing_ids": [
+            6,
+            7,
+            8
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_016",
+          "category": "category_filter",
+          "missing_ids": [
+            9,
+            11,
+            12
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_017",
+          "category": "category_filter",
+          "missing_ids": [
+            25,
+            26,
+            27,
+            28
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_018",
+          "category": "category_filter",
+          "missing_ids": [
+            39,
+            41,
+            42
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_019",
+          "category": "brand_filter",
+          "missing_ids": [
+            1,
+            4,
+            8,
+            48
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_020",
+          "category": "brand_filter",
+          "missing_ids": [
+            2,
+            7
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_021",
+          "category": "brand_filter",
+          "missing_ids": [
+            14,
+            18,
+            45
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_022",
+          "category": "brand_filter",
+          "missing_ids": [
+            39,
+            42,
+            44,
+            50
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_023",
+          "category": "price_range",
+          "missing_ids": [
+            12,
+            34,
+            41
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_024",
+          "category": "price_range",
+          "missing_ids": [
+            1,
+            2,
+            7,
+            8
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_025",
+          "category": "price_range",
+          "missing_ids": [
+            14,
+            15,
+            26,
+            27,
+            33
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_026",
+          "category": "price_range",
+          "missing_ids": [
+            1,
+            2,
+            8
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_027",
+          "category": "combined_filters",
+          "missing_ids": [
+            1,
+            8
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_028",
+          "category": "combined_filters",
+          "missing_ids": [
+            34
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_029",
+          "category": "combined_filters",
+          "missing_ids": [
+            14,
+            45
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_030",
+          "category": "combined_filters",
+          "missing_ids": [
+            25,
+            28,
+            49
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_031",
+          "category": "status_exclusion",
+          "missing_ids": [
+            12
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_032",
+          "category": "status_exclusion",
+          "missing_ids": [
+            34,
+            38
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_033",
+          "category": "status_exclusion",
+          "missing_ids": [
+            9,
+            11,
+            12
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_034",
+          "category": "status_exclusion",
+          "missing_ids": [
+            14,
+            15,
+            16,
+            45
+          ],
+          "actual_ids": []
+        },
+        {
+          "id": "ps_039",
+          "category": "edge_case",
+          "missing_ids": [
+            14,
+            18,
+            45
+          ],
+          "actual_ids": []
+        }
+      ]
+    },
+    "search_filter_precision": {
+      "rate": 1.0,
+      "passed": 39,
+      "total": 39,
+      "failures": []
+    },
+    "search_status_exclusion": {
+      "rate": 1.0,
+      "passed": 4,
+      "total": 4,
+      "failures": []
+    },
+    "search_empty_accuracy": {
+      "rate": 1.0,
+      "passed": 3,
+      "total": 3,
+      "failures": []
+    },
+    "detail_found": {
+      "rate": 1.0,
+      "passed": 17,
+      "total": 17,
+      "failures": []
+    },
+    "detail_not_found": {
+      "rate": 0.1111,
+      "passed": 1,
+      "total": 9,
+      "failures": [
+        {
+          "id": "pd_006",
+          "category": "detail_by_id_not_found",
+          "actual_error_type": null,
+          "success_correct": false
+        },
+        {
+          "id": "pd_007",
+          "category": "detail_by_id_not_found",
+          "actual_error_type": null,
+          "success_correct": false
+        },
+        {
+          "id": "pd_008",
+          "category": "detail_by_id_not_found",
+          "actual_error_type": null,
+          "success_correct": false
+        },
+        {
+          "id": "pd_009",
+          "category": "detail_by_id_not_found",
+          "actual_error_type": null,
+          "success_correct": false
+        },
+        {
+          "id": "pd_010",
+          "category": "detail_by_id_not_found",
+          "actual_error_type": null,
+          "success_correct": false
+        },
+        {
+          "id": "pd_018",
+          "category": "detail_by_name_miss",
+          "actual_error_type": null,
+          "success_correct": false
+        },
+        {
+          "id": "pd_019",
+          "category": "detail_by_name_miss",
+          "actual_error_type": null,
+          "success_correct": false
+        },
+        {
+          "id": "pd_025",
+          "category": "error_handling",
+          "actual_error_type": null,
+          "success_correct": false
+        }
+      ]
+    },
+    "field_completeness": {
+      "rate": 1.0,
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    }
+  }
+}
