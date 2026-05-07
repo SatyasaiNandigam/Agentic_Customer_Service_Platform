@@ -22,7 +22,7 @@
 
 ## Demo
 
-  <video src="assets/demo.mp4" controls width="900"></video>
+https://github.com/user-attachments/assets/bf544f69-cec3-4800-ac38-75814780235f
 
 ---
 
@@ -458,21 +458,3 @@ LANGCHAIN_TRACING_V2=true
 LANGCHAIN_API_KEY=ls__...
 LANGCHAIN_PROJECT=ecommerce-customer-service
 ```
-
-### Adding a New Tool
-
-1. Create `tools_mcp/tools/my_tool.py` with a `register(mcp: FastMCP)` function
-2. Add a parameterized query module under `tools_mcp/db/queries/`
-3. Register the module in `tools_mcp/server.py`
-4. If the tool introduces a new intent, add it to `TOOL_INTENTS` in `app/agent/state.py`
-5. Add few-shot examples to `app/agent/prompts/classifier.py`
-
-### Adding a New Intent
-
-1. Add the string literal to `IntentType` in `app/agent/state.py`
-2. Classify it into `TOOL_INTENTS`, `DIRECT_RESPONSE_INTENTS`, or `ESCALATION_INTENTS`
-3. Decide which delegator domain it belongs to (`need_information`, `need_assistance`, `need_advice`) and update `app/agent/prompts/customer_delegator.py` if the mapping isn't covered
-4. Add few-shot examples to `app/agent/prompts/classifier.py`
-5. Update the tool planner system prompt if the intent maps to a tool
-
----
