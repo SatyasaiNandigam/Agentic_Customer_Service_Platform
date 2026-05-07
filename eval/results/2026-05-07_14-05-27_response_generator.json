@@ -1,0 +1,127 @@
+{
+  "run_metadata": {
+    "date": "2026-05-07 14:05:27",
+    "dataset_path": "eval\\datasets\\response_generator.jsonl",
+    "total_cases": 40,
+    "concurrency": 4,
+    "duration_seconds": 146.3,
+    "errors": 0,
+    "geval_enabled": true,
+    "geval_model": "gpt-4o-mini",
+    "llm_model": "gpt-4o-mini",
+    "note": "Response-generator isolation eval: hard assertions + optional GEval"
+  },
+  "summary": {
+    "total_records": 40,
+    "error_count": 0,
+    "passes_all_thresholds": true
+  },
+  "thresholds": {
+    "must_contain_pass_rate": {
+      "value": 1.0,
+      "threshold": 0.98,
+      "pass": true
+    },
+    "must_not_contain_pass_rate": {
+      "value": 1.0,
+      "threshold": 1.0,
+      "pass": true
+    },
+    "off_topic_refusal_rate": {
+      "value": 1.0,
+      "threshold": 0.99,
+      "total_eligible": 2,
+      "pass": true
+    }
+  },
+  "geval_summary": {
+    "evaluated": 40,
+    "errors": 0,
+    "avg_score": 0.8955,
+    "below_threshold": 2,
+    "threshold": 0.7,
+    "passes": true,
+    "per_path": {
+      "tool_result": {
+        "count": 18,
+        "avg_score": 0.9535,
+        "below_threshold": 0
+      },
+      "tool_error": {
+        "count": 11,
+        "avg_score": 0.7595,
+        "below_threshold": 2
+      },
+      "direct": {
+        "count": 11,
+        "avg_score": 0.9364,
+        "below_threshold": 0
+      }
+    },
+    "low_scorers": [
+      {
+        "id": "te_005",
+        "score": 0.2876855929934387,
+        "reason": "The input clearly asks about hiking boots, but the actual output fails to address the customer's inquiry directly and instead redirects them to the website, which may not be helpful. While the languag"
+      },
+      {
+        "id": "te_007",
+        "score": 0.5756689838965035,
+        "reason": "The input clearly states a service issue regarding order cancellation, which aligns with the evaluation steps. The actual output uses professional and empathetic language, suggesting the user try agai"
+      }
+    ]
+  },
+  "performance": {
+    "latency_ms": {
+      "p50": 1500.5,
+      "p95": 2781.7,
+      "mean": 1693.2,
+      "max": 4569.9
+    },
+    "api_tokens": {
+      "total_prompt": 29942,
+      "total_completion": 1817,
+      "avg_prompt": 748.5,
+      "avg_completion": 45.4
+    }
+  },
+  "per_category": {
+    "tool_result": {
+      "count": 15,
+      "must_contain_passed": 15,
+      "must_not_contain_passed": 15,
+      "refusal_correct": 15,
+      "errors": 0,
+      "avg_latency_ms": 2387.6,
+      "avg_geval_score": 0.9639
+    },
+    "tool_error": {
+      "count": 10,
+      "must_contain_passed": 10,
+      "must_not_contain_passed": 10,
+      "refusal_correct": 10,
+      "errors": 0,
+      "avg_latency_ms": 1224.9,
+      "avg_geval_score": 0.7576
+    },
+    "direct": {
+      "count": 10,
+      "must_contain_passed": 10,
+      "must_not_contain_passed": 10,
+      "refusal_correct": 10,
+      "errors": 0,
+      "avg_latency_ms": 1346.8,
+      "avg_geval_score": 0.9418
+    },
+    "rewrite": {
+      "count": 5,
+      "must_contain_passed": 5,
+      "must_not_contain_passed": 5,
+      "refusal_correct": 5,
+      "errors": 0,
+      "avg_latency_ms": 1239.4,
+      "avg_geval_score": 0.873
+    }
+  },
+  "failures": []
+}

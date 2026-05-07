@@ -63,6 +63,10 @@ def register(mcp: FastMCP) -> None:
                     ttl=settings.cache_ttl_product,
                     fetch=lambda: get_product_detail(db, product_id),
                 )
+                # Guard against stale cache: a product cached as active may have been
+                # deactivated in the DB within the TTL window.
+                if detail is not None and detail.get("status") != "active":
+                    detail = None
             except Exception as exc:
                 return {"error": f"Failed to fetch product: {exc}", "error_type": "db_error"}
 
